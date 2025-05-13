@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>EventHub - Discover Venues</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+    body { background: #fdfdfd; }
+
+    .nav-header {
+      padding: 30px;
+    }
+
+    a {
+  text-decoration: none;
+    color: inherit;
+}
+
+
+    .top-nav {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      background: #fff;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      padding: 10px 0;
+      gap: 20px;
+      animation: fadeIn 0.8s ease-in;
+    }
+
+    .nav-item {
+      position: relative; /* Essential for the dropdown positioning */
+      list-style: none;
+      padding: 10px 20px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-weight: bold;
+      color: #333;
+      border-radius: 8px;
+      text-decoration: none;
+    }
+
+    .nav-item:hover {
+      background-color: #3498db;
+      color: #fff;
+      transform: scale(1.1);
+    }
+
+    /* The dropdown menu */
+    .dropdown {
+      display: none; /* Initially hidden */
+      position: absolute;
+      top: 100%; /* Move the dropdown directly below the nav-item */
+      left: 0;
+      background-color: rgba(30, 41, 40, 0.651);
+      border: 1px solid #2e2c2c;
+      border-radius: 5px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      z-index: 1001; /* Ensure the dropdown is above other content */
+      width: 200px; /* Set a specific width for the dropdown */
+      box-sizing: border-box;
+    }
+
+    .nav-item:hover .dropdown {
+      display: block; /* Show the dropdown when hovering over the parent item */
+    }
+
+    /* Dropdown items styling */
+    .dropdown li {
+      padding: 10px 15px;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    .dropdown li:hover {
+      background-color: #686262;
+    }
+
+    .section-title {
+      font-size: 24px;
+      margin: 30px;
+      color: #222;
+    }
+
+.carousel-container {
+  width: 100%;
+  overflow: hidden;
+  padding: 30px;
+  position: relative;
+}
+
+.carousel-track {
+  display: flex;
+  transition: transform 0.5s ease-in-out;
+  will-change: transform;
+}
+
+.venue-card {
+  flex: 0 0 20%;
+  transition: transform 0.5s ease-in-out;
+}
+
+.venue-card.center {
+  transform: scale(1.2);
+  z-index: 2;
+}
+
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .venue-card {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      min-width: 180px;
+      flex-shrink: 0;
+      padding: 10px;
+      text-align: center;
+      transition: transform 0.3s ease;
+    }
+
+    .venue-card:hover {
+      transform: scale(1.05);
+    }
+
+    .venue-card img {
+      width: 100%;
+      height: 120px;
+      object-fit: cover;
+      border-radius: 8px;
+    }
+
+    .venue-card h4 {
+      margin: 10px 0 5px;
+      font-size: 16px;
+    }
+
+    .venue-card p {
+      font-size: 14px;
+      color: #555;
+    }
+
+    .venue-card button {
+      margin-top: 10px;
+      padding: 6px 10px;
+      border: none;
+      background: #3498db;
+      color: white;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .venue-card button:hover {
+      background-color: #2980b9;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="nav-header">
+    <h1>Discover</h1>
+  </div>
+
+  <ul class="top-nav">
+    <li class="nav-item">Events
+      <ul class="dropdown">
+        <li><a href="wedding.html">Weddings</a></li>
+        <li><a href="concert.html">Concerts</a></li>
+        <li><a href="corporate.html">Corporate</a></li>
+        <li><a href="festival.html">Festivals</a></li>
+        <li><a href="birthday.html">Birthdays</a></li>
+        <li><a href="charity.html">Charity</a></li>
+        <li><a href="fashion.html">Fashion</a></li>
+        <li><a href="sports.html">Sports</a></li>
+        <li><a href="expo.html">Expos</a></li>
+        <li><a href="religious.html">Religious</a></li>
+      </ul>
+    </li>
+    <li class="nav-item"><a href="about.html">About</a></li>
+    <li class="nav-item"><a href="venues.html">Venue Available</a></li>
+    <li class="nav-item"><a href="scheduled.html">Venue Scheduled</a></li>
+    <li class="nav-item"><a href="profile.html">Profile</a></li>
+  </ul>
+
+  <div class="section-title">Venue Recommendations</div>
+<div class="carousel-container">
+  <div class="carousel-track" id="carouselTrack">
+    <!-- Copy all your .venue-card divs here (as they are) -->
+    <div class="venue-card">
+      <img src="images/pexels-bence-szemerey-337043-7081167.jpg" alt="Venue 1">
+      <h4>Crystal Hall</h4>
+      <p>150,000 TSH</p>
+      <button>Book</button>
+    </div>
+
+        <div class="venue-card">
+      <img src="images/pexels-bence-szemerey-337043-7081167.jpg" alt="Venue 1">
+      <h4>Crystal Hall</h4>
+      <p>150,000 TSH</p>
+      <button>Book</button>
+    </div>
+
+        <div class="venue-card">
+      <img src="images/pexels-bence-szemerey-337043-7081167.jpg" alt="Venue 1">
+      <h4>Crystal Hall</h4>
+      <p>150,000 TSH</p>
+      <button>Book</button>
+    </div>
+
+        <div class="venue-card">
+      <img src="images/pexels-bence-szemerey-337043-7081167.jpg" alt="Venue 1">
+      <h4>Crystal Hall</h4>
+      <p>150,000 TSH</p>
+      <button>Book</button>
+    </div>
+
+        <div class="venue-card">
+      <img src="images/pexels-bence-szemerey-337043-7081167.jpg" alt="Venue 1">
+      <h4>Crystal Hall</h4>
+      <p>150,000 TSH</p>
+      <button>Book</button>
+    </div>
+
+        <div class="venue-card">
+      <img src="images/pexels-bence-szemerey-337043-7081167.jpg" alt="Venue 1">
+      <h4>Crystal Hall</h4>
+      <p>150,000 TSH</p>
+      <button>Book</button>
+    </div>
+
+        <div class="venue-card">
+      <img src="images/pexels-bence-szemerey-337043-7081167.jpg" alt="Venue 1">
+      <h4>Crystal Hall</h4>
+      <p>150,000 TSH</p>
+      <button>Book</button>
+    </div>
+
+        <div class="venue-card">
+      <img src="images/pexels-bence-szemerey-337043-7081167.jpg" alt="Venue 1">
+      <h4>Crystal Hall</h4>
+      <p>150,000 TSH</p>
+      <button>Book</button>
+    </div>
+
+        <div class="venue-card">
+      <img src="images/pexels-bence-szemerey-337043-7081167.jpg" alt="Venue 1">
+      <h4>Crystal Hall</h4>
+      <p>150,000 TSH</p>
+      <button>Book</button>
+    </div>
+    <!-- Copy the rest of your venue-card divs here (10 total) -->
+    <!-- ... -->
+  </div>
+</div>
+
+<script>
+  const track = document.getElementById('carouselTrack');
+  const cards = document.querySelectorAll('.venue-card');
+  let index = 0;
+  const visibleCards = 5;
+  const totalCards = cards.length;
+
+  function updateCarousel() {
+    cards.forEach((card, i) => {
+      card.classList.remove('center');
+      if (i === index + Math.floor(visibleCards / 2)) {
+        card.classList.add('center');
+      }
+    });
+    const offset = index * (100 / visibleCards);
+    track.style.transform = `translateX(-${offset}%)`;
+  }
+
+  function autoSlide() {
+    index = (index + 1) % (totalCards - visibleCards + 1);
+    updateCarousel();
+  }
+
+  updateCarousel();
+  setInterval(autoSlide, 3000); // Slide every 3 seconds
+</script>
+
+
+</body>
+</html>
