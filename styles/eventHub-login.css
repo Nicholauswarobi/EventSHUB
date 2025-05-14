@@ -1,0 +1,75 @@
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Open+Sans:ital,wght@0,300..800;1,300..800&family=Playfair+Display+SC:ital,wght@0,400;0,700;0,900;1,400;1,700;1,900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Wallpoet&display=swap');
+body {
+  font-family: Arial, sans-serif;
+  background: linear-gradient(135deg, #3498db, #8e44ad);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.container {
+  background: #fff;
+  padding: 30px;
+  border-radius: 10px;
+  width: 350px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+h2 {
+  text-align: center;
+  margin-bottom: 20px;
+  font-family: 'Bebas Neue', cursive;
+  font-weight: 400;
+  font-size: 38px;
+  letter-spacing: 4px;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"] {
+  width: 100%;
+  padding: 10px;
+  margin: 8px 0;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+button {
+  width: 100%;
+  padding: 10px;
+  background: #6828a7;
+  border: none;
+  color: white;
+  font-size: 16px;
+  border-radius: 5px;
+  margin-top: 10px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #9354d1;
+}
+
+.toggle {
+  text-align: center;
+  margin-top: 15px;
+}
+
+.toggle a {
+  color: #007bff;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.toggle a:hover {
+  text-decoration: underline;
+}
+
+.form-group {
+  display: none;
+}
+
+.form-group.active {
+  display: block;
+}

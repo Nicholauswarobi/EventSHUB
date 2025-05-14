@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Event Types</title>
+  <link rel="stylesheet" href="styles/events.css">
+</head>
+<body>
+
+    <!-- Header Section -->
+  <div class="header">
+    <h1>Our Event Services</h1>
+    <p>Find the perfect venue for your event from our curated list of options.</p>
+  </div>
+
+  <!-- Navigation Bar -->
+  <div class="top-nav">
+    <a href="EventHub.html">Home</a>
+    <a href="venues.html">Venues</a>
+    <a href="Events.html">Events</a>
+    <a href="about.html">About</a>
+    <a href="contact.html">Contact</a>
+  </div>
+
+  <div class="container">
+    <!-- Wedding -->
+    <div class="card">
+      <img src="images/pexels-omer-aliko-634827664-17653603.jpg" alt="Wedding Event">
+      <div class="card-content">
+        <h2>Weddings</h2>
+        <p>Elegant wedding planning and decoration services tailored to your dream day.</p>
+      </div>
+    </div>
+
+    <!-- Birthday Party -->
+    <div class="card">
+      <img src="images/pexels-abhinavcoca-291528.jpg" alt="Birthday Party">
+      <div class="card-content">
+        <h2>Birthday Parties</h2>
+        <p>Fun-filled birthday themes for kids, teens, and adults with cake and décor!</p>
+      </div>
+    </div>
+
+    <!-- Concert -->
+    <div class="card">
+      <img src="images/pexels-sebastian-ervi-866902-1763075.jpg" alt="Concert">
+      <div class="card-content">
+        <h2>Concerts</h2>
+        <p>Stage, sound, and lighting for energetic music events and live performances.</p>
+      </div>
+    </div>
+
+    <!-- Corporate Tech Talk -->
+    <div class="card">
+      <img src="images/pexels-divinetechygirl-1181406.jpg" alt="Corporate Tech Talk">
+      <div class="card-content">
+        <h2>Corporate Tech Talks</h2>
+        <p>Professional event management for business meetings, tech talks, and seminars.</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Animate cards on scroll using IntersectionObserver
+    const cards = document.querySelectorAll('.card');
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, { threshold: 0.2 });
+
+    cards.forEach(card => observer.observe(card));
+  </script>
+
+</body>
+</html>

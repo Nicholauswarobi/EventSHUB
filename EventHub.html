@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EventHub - Discover Venues</title>
+  <link rel="stylesheet" href="styles/style.css">
+</head>
+<body>
+  <!-- Background Overlay -->
+  <div class="overlay"></div>
+
+  <!-- Header Section -->
+  <div class="header">
+    <h1>Welcome to EventHub</h1>
+    <p>Discover and book the perfect venue for your event.</p>
+  </div>
+
+  <!-- Navigation Bar -->
+  <div class="top-nav">
+    <a href="EventHub.html">Home</a>
+    <a href="venues.html">Venues</a>
+    <div class="dropdown">
+      <a href="Events.html" class="dropdown-toggle">Events &#9662;</a>
+      <div class="dropdown-content">
+        <a href="#">Weddings</a>
+        <a href="#">Corporate Events</a>
+        <a href="#">Birthday Parties</a>
+        <a href="#">Concerts</a>
+        <a href="#">Workshops</a>
+        <a href="#">Exhibitions</a>
+        <a href="Events.html">All Events</a>
+      </div>
+    </div>
+    <a href="about.html">About</a>
+    <a href="contact.html">Contact</a>
+    <div class="profile-dropdown">
+      <img src="images/ceo.png" alt="Profile" class="profile-image" id="profileImage">
+      <div class="dropdown-menu" id="dropdownMenu">
+        <p class="username">John Doe</p>
+        <a href="profile-settings.html">Profile Settings</a>
+        <a href="EventHub-Login.html">Logout</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content Wrapper -->
+  <main>
+    <!-- Section Title -->
+    <div class="section-title">Venue Recommendations</div>
+
+    <!-- Carousel Section -->
+    <div class="carousel-container">
+      <div class="carousel-track" id="carouselTrack">
+        <div class="venue-card behind">
+          <img src="images/pexels-amar-14716282.jpg" alt="Venue 1">
+          <h4>Crystal Hall</h4>
+          <p>150,000 TSH</p>
+        </div>
+        <div class="venue-card left">
+          <img src="images/pexels-gnasralla-3866658.jpg" alt="Venue 2">
+          <h4>Grand Plaza</h4>
+          <p>200,000 TSH</p>
+        </div>
+        <div class="venue-card active">
+          <img src="images/pexels-rosario-fernandes-26325-3835638.jpg" alt="Venue 3">
+          <h4>Royal Garden</h4>
+          <p>180,000 TSH</p>
+        </div>
+        <div class="venue-card right">
+          <img src="images/pexels-tuurt-391535.jpg" alt="Venue 4">
+          <h4>Sunset Arena</h4>
+          <p>250,000 TSH</p>
+        </div>
+        <div class="venue-card behind">
+          <img src="images/pexels-pixabay-356065.jpg" alt="Venue 5">
+          <h4>Emerald Hall</h4>
+          <p>300,000 TSH</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer Section -->
+  <div class="footer">
+    <p>&copy; 2025 EventHub. All rights reserved.</p>
+  </div>
+
+  <script>
+    const track = document.getElementById('carouselTrack');
+    const cards = document.querySelectorAll('.venue-card');
+    let currentIndex = 2; // Start with the center card
+    let autoSlideInterval;
+
+    function updateCarousel() {
+      cards.forEach((card, index) => {
+        card.classList.remove('active', 'left', 'right', 'behind');
+        if (index === currentIndex) {
+          card.classList.add('active');
+        } else if (index === (currentIndex - 1 + cards.length) % cards.length) {
+          card.classList.add('left');
+        } else if (index === (currentIndex + 1) % cards.length) {
+          card.classList.add('right');
+        } else {
+          card.classList.add('behind');
+        }
+      });
+    }
+
+    function nextSlide() {
+      currentIndex = (currentIndex + 1) % cards.length;
+      updateCarousel();
+    }
+
+    function startAutoSlide() {
+      autoSlideInterval = setInterval(nextSlide, 3000); // Auto-slide every 3 seconds
+    }
+
+    function stopAutoSlide() {
+      clearInterval(autoSlideInterval);
+    }
+
+    // Start auto-slide on page load
+    startAutoSlide();
+
+    // Add event listeners to stop and resume auto-slide on hover
+    cards.forEach((card) => {
+      card.addEventListener('mouseenter', stopAutoSlide); // Stop sliding when pointer is over an image
+      card.addEventListener('mouseleave', startAutoSlide); // Resume sliding when pointer leaves the image
+    });
+
+    updateCarousel();
+
+    const profileImage = document.getElementById('profileImage');
+    const dropdownMenu = document.getElementById('dropdownMenu');
+
+    // Toggle dropdown visibility on profile image click
+    profileImage.addEventListener('click', () => {
+      const isVisible = dropdownMenu.style.display === 'block';
+      dropdownMenu.style.display = isVisible ? 'none' : 'block';
+    });
+
+    // Close the dropdown when clicking outside of it
+    document.addEventListener('click', (event) => {
+      if (!profileImage.contains(event.target) && !dropdownMenu.contains(event.target)) {
+        dropdownMenu.style.display = 'none';
+      }
+    });
+  </script>
+
+</body>
+</html>
+

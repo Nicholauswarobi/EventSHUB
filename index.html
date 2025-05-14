@@ -2,409 +2,100 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>EventHub - Discover Venues</title>
-  <style>
-    /* General Reset */
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: 'Segoe UI', sans-serif;
-    }
-    /* Body Background */
-    body {
-      background: linear-gradient(135deg, #3498db, #8e44ad); /* Gradient background */
-      color: #333;
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh; /* Ensures the body takes up the full height of the viewport */
-    }
-
-    /* Main Content Wrapper */
-    main {
-      flex: 1; /* Pushes the footer to the bottom */
-    }
-
-    /* Optional: Add a semi-transparent overlay for better readability */
-    .overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.3); /* Dark overlay */
-      z-index: -1; /* Places it behind the content */
-    }
-
-    /* Header Section */
-    .header {
-      background: rgba(255, 255, 255, 0.8); /* Semi-transparent background for the header */
-      padding: 20px 40px;
-      text-align: center;
-      border-radius: 10px;
-      margin: 20px auto;
-      max-width: 80%;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    }
-    .header h1 {
-      font-size: 36px;
-      color: #fff; /* White text for contrast */
-    }
-    .header p {
-      font-size: 18px;
-      color: #ddd; /* Light text for readability */
-    }
-
-    /* Navigation Bar */
-    .top-nav {
-      display: flex;
-      justify-content: space-between; /* Ensures proper spacing between links and profile */
-      align-items: center; /* Vertically centers the content */
-      background: rgba(255, 255, 255, 0.2); /* Semi-transparent white background */
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1); /* Optional shadow for better visibility */
-      padding: 10px 20px; /* Adjust padding for better spacing */
-      position: sticky;
-      top: 0;
-      z-index: 1000;
-      height: 80px; /* Increased height for larger profile image */
-      backdrop-filter: blur(10px); /* Adds a blur effect to the background */
-    }
-
-    .top-nav a {
-      text-decoration: none;
-      color: white; /* Change text color to white for better contrast */
-      font-weight: bold;
-      margin: 0 15px;
-      font-size: 18px; /* Increased font size */
-      transition: color 0.3s;
-    }
-
-    .top-nav a:hover {
-      color: #ddd; /* Lighter hover color for better visibility */
-    }
-
-    /* Dropdown Menu */
-    .dropdown {
-      position: relative;
-    }
-    .dropdown-content {
-      display: none;
-      position: absolute;
-      top: 100%;
-      left: 0;
-      background: rgba(185, 183, 183, 0.103);
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-      border-radius: 5px;
-      overflow: hidden;
-      z-index: 1000;
-      width: 200px; /* Increased width to fit content in one line */
-    }
-    .dropdown-content a {
-      display: block;
-      padding: 10px 20px; /* Adjusted padding for better spacing */
-      text-decoration: none;
-      color: #333;
-      font-size: 16px; /* Increased font size for dropdown items */
-      transition: background 0.3s, color 0.3s;
-    }
-    .dropdown-content a:hover {
-      background: #3498db;
-      color: white;
-    }
-    .dropdown:hover .dropdown-content {
-      display: block;
-    }
-
-    /* Profile Dropdown */
-    .profile-dropdown {
-      position: relative;
-      display: flex; /* Ensures proper alignment */
-      align-items: center; /* Vertically centers the profile image */
-      margin-left: auto;
-      cursor: pointer;
-    }
-    .profile-image {
-      width: 60px; /* Increased width */
-      height: 60px; /* Increased height */
-      border-radius: 50%; /* Makes the image circular */
-      object-fit: cover; /* Ensures the image fits within the circle without distortion */
-      border: 2px solid #3498db; /* Optional border for styling */
-    }
-    .dropdown-menu {
-      display: none; /* Hidden by default */
-      position: absolute;
-      top: 50px;
-      right: 0;
-      background: white;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-      border-radius: 5px;
-      overflow: hidden;
-      z-index: 1000;
-      width: 150px;
-    }
-    .dropdown-menu p {
-      margin: 0;
-      padding: 10px;
-      font-size: 16px;
-      font-weight: bold;
-      color: #333;
-      background: #f9f9f9;
-      border-bottom: 1px solid #ddd;
-    }
-    .dropdown-menu a {
-      display: block;
-      padding: 10px;
-      text-decoration: none;
-      color: #333;
-      transition: background 0.3s, color 0.3s;
-    }
-    .dropdown-menu a:hover {
-      background: #3498db;
-      color: white;
-    }
-
-    /* Section Title */
-    .section-title {
-      text-align: center;
-      font-size: 28px;
-      margin: 40px 0 20px;
-      color: #222;
-    }
-
-    /* Carousel Section */
-    .carousel-container {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      position: relative;
-      overflow: hidden;
-      width: 100%;
-      height: 400px;
-      perspective: 1000px;
-    }
-    .carousel-track {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      position: relative;
-      width: 100%;
-      transform-style: preserve-3d;
-      transition: transform 0.5s ease-in-out;
-    }
-    .venue-card {
-      position: absolute;
-      width: 300px;
-      height: 350px;
-      background: white;
-      border-radius: 10px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-      text-align: center;
-      padding: 15px;
-      opacity: 0.5;
-      transition: transform 0.5s ease, opacity 0.5s ease;
-    }
-    .venue-card img {
-      width: 100%;
-      height: 200px;
-      object-fit: cover;
-      border-radius: 8px;
-    }
-    .venue-card h4 {
-      margin: 10px 0 5px;
-      font-size: 18px;
-      color: #333;
-    }
-    .venue-card p {
-      font-size: 16px;
-      color: #555;
-    }
-    .venue-card.active {
-      transform: translateZ(200px) scale(1.2);
-      opacity: 1;
-      z-index: 2;
-    }
-    .venue-card.left {
-      transform: translateX(-150px) translateZ(100px) scale(0.9);
-    }
-    .venue-card.right {
-      transform: translateX(150px) translateZ(100px) scale(0.9);
-    }
-    .venue-card.behind {
-      transform: translateZ(-200px) scale(0.7);
-    }
-
-    /* Footer Section */
-    .footer {
-      background: #333;
-      color: white;
-      text-align: center;
-      padding: 20px;
-      margin-top: auto; /* Ensures the footer stays at the bottom */
-    }
-
-    /* Responsive Design */
-    @media (max-width: 768px) {
-      .venue-card {
-        width: 250px;
-        height: 300px;
-      }
-      .venue-card img {
-        height: 150px;
-      }
-    }
-    @media (max-width: 480px) {
-      .venue-card {
-        width: 200px;
-        height: 250px;
-      }
-      .venue-card img {
-        height: 120px;
-      }
-    }
-  </style>
+  <title>Login & Registration Form</title>
+ <link rel="stylesheet" href="styles/eventHub-login.css">
 </head>
 <body>
-  <!-- Background Overlay -->
-  <div class="overlay"></div>
 
-  <!-- Header Section -->
-  <div class="header">
-    <h1>Welcome to EventHub</h1>
-    <p>Discover and book the perfect venue for your event.</p>
-  </div>
-
-  <!-- Navigation Bar -->
-  <div class="top-nav">
-    <a href="index.html">Home</a>
-    <a href="venues.html">Venues</a>
-    <div class="dropdown">
-      <a href="#" class="dropdown-toggle">Events &#9662;</a>
-      <div class="dropdown-content">
-        <a href="#">Weddings</a>
-        <a href="#">Corporate Events</a>
-        <a href="#">Birthday Parties</a>
-        <a href="#">Concerts</a>
-        <a href="#">Workshops</a>
-        <a href="#">Exhibitions</a>
-      </div>
-    </div>
-    <a href="about.html">About</a>
-    <a href="contact.html">Contact</a>
-    <div class="profile-dropdown">
-      <img src="images/ceo.png" alt="Profile" class="profile-image" id="profileImage">
-      <div class="dropdown-menu" id="dropdownMenu">
-        <p class="username">John Doe</p>
-        <a href="profile-settings.html">Profile Settings</a>
-        <a href="logout.html">Logout</a>
-      </div>
+<div class="container">
+  <!-- Login Form -->
+  <div id="loginForm" class="form-group active">
+    <h2>Welcome to EventHub</h2>
+    <input type="text" id="loginUsername" placeholder="Username" required>
+    <input type="password" id="loginPassword" placeholder="Password" required>
+    <button onclick="login()">Login</button>
+    <div class="toggle">
+      Don't have an account? <a onclick="toggleForm('register')">Register</a>
     </div>
   </div>
 
-  <!-- Main Content Wrapper -->
-  <main>
-    <!-- Section Title -->
-    <div class="section-title">Venue Recommendations</div>
-
-    <!-- Carousel Section -->
-    <div class="carousel-container">
-      <div class="carousel-track" id="carouselTrack">
-        <div class="venue-card behind">
-          <img src="images/pexels-amar-14716282.jpg" alt="Venue 1">
-          <h4>Crystal Hall</h4>
-          <p>150,000 TSH</p>
-        </div>
-        <div class="venue-card left">
-          <img src="images/pexels-gnasralla-3866658.jpg" alt="Venue 2">
-          <h4>Grand Plaza</h4>
-          <p>200,000 TSH</p>
-        </div>
-        <div class="venue-card active">
-          <img src="images/pexels-rosario-fernandes-26325-3835638.jpg" alt="Venue 3">
-          <h4>Royal Garden</h4>
-          <p>180,000 TSH</p>
-        </div>
-        <div class="venue-card right">
-          <img src="images/pexels-tuurt-391535.jpg" alt="Venue 4">
-          <h4>Sunset Arena</h4>
-          <p>250,000 TSH</p>
-        </div>
-        <div class="venue-card behind">
-          <img src="images/pexels-pixabay-356065.jpg" alt="Venue 5">
-          <h4>Emerald Hall</h4>
-          <p>300,000 TSH</p>
-        </div>
-      </div>
+  <!-- Registration Form -->
+  <div id="registerForm" class="form-group">
+    <h2>Register</h2>
+    <input type="text" id="regUsername" placeholder="Username" required>
+    <input type="email" id="regEmail" placeholder="Email" required>
+    <input type="password" id="regPassword" placeholder="Password" required>
+    <button onclick="register()">Register</button>
+    <div class="toggle">
+      Already have an account? <a onclick="toggleForm('login')">Login</a>
     </div>
-  </main>
-
-  <!-- Footer Section -->
-  <div class="footer">
-    <p>&copy; 2025 EventHub. All rights reserved.</p>
   </div>
+</div>
 
-  <script>
-    const track = document.getElementById('carouselTrack');
-    const cards = document.querySelectorAll('.venue-card');
-    let currentIndex = 2; // Start with the center card
-    let autoSlideInterval;
+<script>
+  function toggleForm(form) {
+    document.getElementById('loginForm').classList.remove('active');
+    document.getElementById('registerForm').classList.remove('active');
 
-    function updateCarousel() {
-      cards.forEach((card, index) => {
-        card.classList.remove('active', 'left', 'right', 'behind');
-        if (index === currentIndex) {
-          card.classList.add('active');
-        } else if (index === (currentIndex - 1 + cards.length) % cards.length) {
-          card.classList.add('left');
-        } else if (index === (currentIndex + 1) % cards.length) {
-          card.classList.add('right');
-        } else {
-          card.classList.add('behind');
-        }
-      });
+    if (form === 'login') {
+      document.getElementById('loginForm').classList.add('active');
+    } else {
+      document.getElementById('registerForm').classList.add('active');
+    }
+  }
+
+  function login() {
+    const username = document.getElementById('loginUsername').value;
+    const password = document.getElementById('loginPassword').value;
+
+    if (!username || !password) {
+      alert('Please fill in both fields');
+      return;
     }
 
-    function nextSlide() {
-      currentIndex = (currentIndex + 1) % cards.length;
-      updateCarousel();
+    alert(`Logged in as ${username}`);
+  }
+
+  function register() {
+    const username = document.getElementById('regUsername').value;
+    const email = document.getElementById('regEmail').value;
+    const password = document.getElementById('regPassword').value;
+
+    if (!username || !email || !password) {
+      alert('Please fill in all fields');
+      return;
     }
 
-    function startAutoSlide() {
-      autoSlideInterval = setInterval(nextSlide, 3000); // Auto-slide every 3 seconds
+    alert(`Registered successfully as ${username}`);
+  }
+
+  function login() {
+    const username = document.getElementById('loginUsername').value;
+    const password = document.getElementById('loginPassword').value;
+
+    if (!username || !password) {
+      alert('Please fill in both fields');
+      return;
     }
 
-    function stopAutoSlide() {
-      clearInterval(autoSlideInterval);
+    alert(`Logged in as ${username}`);
+    window.location.href = 'EventHub.html'; // Redirect to index.html
+  }
+
+  function register() {
+    const username = document.getElementById('regUsername').value;
+    const email = document.getElementById('regEmail').value;
+    const password = document.getElementById('regPassword').value;
+
+    if (!username || !email || !password) {
+      alert('Please fill in all fields');
+      return;
     }
 
-    // Start auto-slide on page load
-    startAutoSlide();
-
-    // Add event listeners to stop and resume auto-slide on hover
-    cards.forEach((card) => {
-      card.addEventListener('mouseenter', stopAutoSlide); // Stop sliding when pointer is over an image
-      card.addEventListener('mouseleave', startAutoSlide); // Resume sliding when pointer leaves the image
-    });
-
-    updateCarousel();
-
-    const profileImage = document.getElementById('profileImage');
-    const dropdownMenu = document.getElementById('dropdownMenu');
-
-    // Toggle dropdown visibility on profile image click
-    profileImage.addEventListener('click', () => {
-      const isVisible = dropdownMenu.style.display === 'block';
-      dropdownMenu.style.display = isVisible ? 'none' : 'block';
-    });
-
-    // Close the dropdown when clicking outside of it
-    document.addEventListener('click', (event) => {
-      if (!profileImage.contains(event.target) && !dropdownMenu.contains(event.target)) {
-        dropdownMenu.style.display = 'none';
-      }
-    });
-  </script>
+    alert(`Registered successfully as ${username}`);
+    window.location.href = 'index.html'; // Redirect to index.html
+  }
+</script>
 
 </body>
 </html>
-
