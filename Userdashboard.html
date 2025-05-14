@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Customer Dashboard - EventHub</title>
+  <style>
+    /* General Reset */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', sans-serif;
+    }
+    body {
+      background: #f9f9f9;
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* Header Section */
+    .header {
+      background: linear-gradient(135deg, #3498db, #2980b9);
+      color: white;
+      padding: 20px 40px;
+      text-align: center;
+    }
+    .header h1 {
+      font-size: 36px;
+      margin-bottom: 10px;
+    }
+    .header p {
+      font-size: 18px;
+    }
+
+    /* Dashboard Layout */
+    .dashboard {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      padding: 20px;
+    }
+
+    /* Dashboard Cards */
+    .dashboard-card {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+      flex: 1;
+      min-width: 300px;
+      text-align: center;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .dashboard-card:hover {
+      transform: scale(1.05);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+    }
+    .dashboard-card h3 {
+      font-size: 24px;
+      margin-bottom: 10px;
+      color: #3498db;
+    }
+    .dashboard-card p {
+      font-size: 16px;
+      color: #555;
+    }
+    .dashboard-card a {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 10px 20px;
+      background: #3498db;
+      color: white;
+      text-decoration: none;
+      border-radius: 5px;
+      transition: background 0.3s;
+    }
+    .dashboard-card a:hover {
+      background: #2980b9;
+    }
+
+    /* Footer Section */
+    .footer {
+      background: #333;
+      color: white;
+      text-align: center;
+      padding: 20px;
+      margin-top: auto;
+    }
+    .footer p {
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header Section -->
+  <div class="header">
+    <h1>Welcome to Your Dashboard</h1>
+    <p>Manage your bookings, payments, and profile settings all in one place.</p>
+  </div>
+
+  <!-- Dashboard Section -->
+  <div class="dashboard">
+    <!-- My Bookings -->
+    <div class="dashboard-card">
+      <h3>My Bookings</h3>
+      <p>View and manage your venue bookings.</p>
+      <a href="my-bookings.html">View Bookings</a>
+    </div>
+
+    <!-- Saved Venues -->
+    <div class="dashboard-card">
+      <h3>Saved Venues</h3>
+      <p>View your wishlist and favorite venues.</p>
+      <a href="saved-venues.html">View Wishlist</a>
+    </div>
+
+    <!-- Payments -->
+    <div class="dashboard-card">
+      <h3>Payments</h3>
+      <p>Check your payment history and download invoices.</p>
+      <a href="payments.html">View Payments</a>
+    </div>
+
+    <!-- Profile Settings -->
+    <div class="dashboard-card">
+      <h3>Profile Settings</h3>
+      <p>Edit your personal information and change your password.</p>
+      <a href="profile-settings.html">Edit Profile</a>
+    </div>
+
+    <!-- Support -->
+    <div class="dashboard-card">
+      <h3>Support</h3>
+      <p>Contact support or submit feedback.</p>
+      <a href="support.html">Get Support</a>
+    </div>
+  </div>
+
+  <!-- Footer Section -->
+  <div class="footer">
+    <p>&copy; 2025 EventHub. All rights reserved.</p>
+  </div>
+
+</body>
+</html>

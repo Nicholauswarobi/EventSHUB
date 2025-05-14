@@ -38,24 +38,106 @@
     /* Navigation Bar */
     .top-nav {
       display: flex;
-      justify-content: center;
-      align-items: center;
+      justify-content: space-between; /* Ensures proper spacing between links and profile */
+      align-items: center; /* Vertically centers the content */
       background: white;
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-      padding: 15px 20px;
+      padding: 10px 20px; /* Adjust padding for better spacing */
       position: sticky;
       top: 0;
       z-index: 1000;
+      height: 80px; /* Increased height for larger profile image */
     }
     .top-nav a {
       text-decoration: none;
       color: #333;
       font-weight: bold;
       margin: 0 15px;
+      font-size: 18px; /* Increased font size */
       transition: color 0.3s;
     }
     .top-nav a:hover {
       color: #3498db;
+    }
+
+    /* Dropdown Menu */
+    .dropdown {
+      position: relative;
+    }
+    .dropdown-content {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      background: white;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      border-radius: 5px;
+      overflow: hidden;
+      z-index: 1000;
+      width: 200px; /* Increased width to fit content in one line */
+    }
+    .dropdown-content a {
+      display: block;
+      padding: 10px 20px; /* Adjusted padding for better spacing */
+      text-decoration: none;
+      color: #333;
+      font-size: 16px; /* Increased font size for dropdown items */
+      transition: background 0.3s, color 0.3s;
+    }
+    .dropdown-content a:hover {
+      background: #3498db;
+      color: white;
+    }
+    .dropdown:hover .dropdown-content {
+      display: block;
+    }
+
+    /* Profile Dropdown */
+    .profile-dropdown {
+      position: relative;
+      display: flex; /* Ensures proper alignment */
+      align-items: center; /* Vertically centers the profile image */
+      margin-left: auto;
+      cursor: pointer;
+    }
+    .profile-image {
+      width: 60px; /* Increased width */
+      height: 60px; /* Increased height */
+      border-radius: 50%; /* Makes the image circular */
+      object-fit: cover; /* Ensures the image fits within the circle without distortion */
+      border: 2px solid #3498db; /* Optional border for styling */
+    }
+    .dropdown-menu {
+      display: none; /* Hidden by default */
+      position: absolute;
+      top: 50px;
+      right: 0;
+      background: white;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      border-radius: 5px;
+      overflow: hidden;
+      z-index: 1000;
+      width: 150px;
+    }
+    .dropdown-menu p {
+      margin: 0;
+      padding: 10px;
+      font-size: 16px;
+      font-weight: bold;
+      color: #333;
+      background: #f9f9f9;
+      border-bottom: 1px solid #ddd;
+    }
+    .dropdown-menu a {
+      display: block;
+      padding: 10px;
+      text-decoration: none;
+      color: #333;
+      transition: background 0.3s, color 0.3s;
+    }
+    .dropdown-menu a:hover {
+      background: #3498db;
+      color: white;
     }
 
     /* Section Title */
@@ -173,10 +255,27 @@
   <div class="top-nav">
     <a href="index.html">Home</a>
     <a href="venues.html">Venues</a>
-    <a href="#">Events</a>
+    <div class="dropdown">
+      <a href="#" class="dropdown-toggle">Events &#9662;</a>
+      <div class="dropdown-content">
+        <a href="#">Weddings</a>
+        <a href="#">Corporate Events</a>
+        <a href="#">Birthday Parties</a>
+        <a href="#">Concerts</a>
+        <a href="#">Workshops</a>
+        <a href="#">Exhibitions</a>
+      </div>
+    </div>
     <a href="about.html">About</a>
     <a href="contact.html">Contact</a>
-    <a href="profile.html">Profile</a>
+    <div class="profile-dropdown">
+      <img src="images/ceo.png" alt="Profile" class="profile-image" id="profileImage">
+      <div class="dropdown-menu" id="dropdownMenu">
+        <p class="username">John Doe</p>
+        <a href="profile-settings.html">Profile Settings</a>
+        <a href="logout.html">Logout</a>
+      </div>
+    </div>
   </div>
 
   <!-- Section Title -->
@@ -262,7 +361,24 @@
     });
 
     updateCarousel();
+
+    const profileImage = document.getElementById('profileImage');
+    const dropdownMenu = document.getElementById('dropdownMenu');
+
+    // Toggle dropdown visibility on profile image click
+    profileImage.addEventListener('click', () => {
+      const isVisible = dropdownMenu.style.display === 'block';
+      dropdownMenu.style.display = isVisible ? 'none' : 'block';
+    });
+
+    // Close the dropdown when clicking outside of it
+    document.addEventListener('click', (event) => {
+      if (!profileImage.contains(event.target) && !dropdownMenu.contains(event.target)) {
+        dropdownMenu.style.display = 'none';
+      }
+    });
   </script>
 
 </body>
 </html>
+

@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - EventHub</title>
+  <style>
+    /* General Reset */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', sans-serif;
+    }
+    body {
+      background: #f9f9f9;
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* Header Section */
+    .header {
+      background: linear-gradient(135deg, #3498db, #2980b9);
+      color: white;
+      padding: 20px 40px;
+      text-align: center;
+    }
+    .header h1 {
+      font-size: 36px;
+      margin-bottom: 10px;
+    }
+    .header p {
+      font-size: 18px;
+    }
+
+    /* Dashboard Layout */
+    .dashboard {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      padding: 20px;
+    }
+
+    /* Dashboard Cards */
+    .dashboard-card {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+      flex: 1;
+      min-width: 300px;
+      text-align: center;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .dashboard-card:hover {
+      transform: scale(1.05);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+    }
+    .dashboard-card h3 {
+      font-size: 24px;
+      margin-bottom: 10px;
+      color: #3498db;
+    }
+    .dashboard-card p {
+      font-size: 16px;
+      color: #555;
+    }
+    .dashboard-card a {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 10px 20px;
+      background: #3498db;
+      color: white;
+      text-decoration: none;
+      border-radius: 5px;
+      transition: background 0.3s;
+    }
+    .dashboard-card a:hover {
+      background: #2980b9;
+    }
+
+    /* Footer Section */
+    .footer {
+      background: #333;
+      color: white;
+      text-align: center;
+      padding: 20px;
+      margin-top: auto;
+    }
+    .footer p {
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header Section -->
+  <div class="header">
+    <h1>Welcome to the Admin Dashboard</h1>
+    <p>Manage the entire platform efficiently and effectively.</p>
+  </div>
+
+  <!-- Dashboard Section -->
+  <div class="dashboard">
+    <!-- Statistics Overview -->
+    <div class="dashboard-card">
+      <h3>Statistics Overview</h3>
+      <p>View platform statistics like total users, vendors, bookings, and revenue.</p>
+      <a href="statistics-overview.html">View Statistics</a>
+    </div>
+
+    <!-- User Management -->
+    <div class="dashboard-card">
+      <h3>User Management</h3>
+      <p>Manage users, block/unblock accounts, and view activity.</p>
+      <a href="user-management.html">Manage Users</a>
+    </div>
+
+    <!-- Vendor Management -->
+    <div class="dashboard-card">
+      <h3>Vendor Management</h3>
+      <p>Approve/reject vendor applications and monitor performance.</p>
+      <a href="vendor-management.html">Manage Vendors</a>
+    </div>
+
+    <!-- Bookings Overview -->
+    <div class="dashboard-card">
+      <h3>Bookings Overview</h3>
+      <p>View and manage all bookings across the platform.</p>
+      <a href="bookings-overview.html">View Bookings</a>
+    </div>
+
+    <!-- Revenue & Transactions -->
+    <div class="dashboard-card">
+      <h3>Revenue & Transactions</h3>
+      <p>Track payments, commissions, and withdrawals.</p>
+      <a href="revenue-transactions.html">View Revenue</a>
+    </div>
+
+    <!-- Reports & Logs -->
+    <div class="dashboard-card">
+      <h3>Reports & Logs</h3>
+      <p>Access login history, booking activity logs, and revenue reports.</p>
+      <a href="reports-logs.html">View Reports</a>
+    </div>
+
+    <!-- Event Categories Management -->
+    <div class="dashboard-card">
+      <h3>Event Categories</h3>
+      <p>Add or remove event types like weddings, concerts, and more.</p>
+      <a href="event-categories.html">Manage Categories</a>
+    </div>
+
+    <!-- Settings -->
+    <div class="dashboard-card">
+      <h3>Settings</h3>
+      <p>Update system settings, email notifications, and branding controls.</p>
+      <a href="settings.html">View Settings</a>
+    </div>
+  </div>
+
+  <!-- Footer Section -->
+  <div class="footer">
+    <p>&copy; 2025 EventHub. All rights reserved.</p>
+  </div>
+
+</body>
+</html>
