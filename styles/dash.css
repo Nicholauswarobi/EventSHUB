@@ -19,10 +19,10 @@
   
 }
 .card {
-  background-color: white;
+  background-color: #0a1a29;
   padding: 20px;
   border-radius: 5px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 5px 6px rgba(255, 255, 255, 0.514); 
   flex: 1 1 calc(50% - 20px);
   min-width: 220px;
   display: flex;
@@ -31,10 +31,13 @@
   align-items: center;
 }
 h3{
+  color: #BEC6ED;
     font-size: 28px;
 }
 h6{
-    font-size: 20px;
+
+    color: white;
+    font-size: 25px;
 }
 
 .half-width {
@@ -44,27 +47,20 @@ h6{
   justify-content: center;
   align-items: center;
 }
-/* .chart-placeholder {
-  height: 200px;
-  background: #e9ecef;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #6c757d;
-  margin-top: 10px;
-} */
+
 table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 20px;
 }
 table th, table td {
-  border: 1px solid #ddd;
+  border: 1px solid #7dc3fc;
+  color: #D5DAF3;
   padding: 8px;
   text-align: left;
 }
 table th {
-  background-color: #f1f1f1;
+  background-color: #0a1a29;
 }
 .text-success {
   color: green;
