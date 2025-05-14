@@ -15,7 +15,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    backdrop-filter: blur(4px);
+    /* backdrop-filter: blur(6px); */
 }
 /* Navigation Bar */
 .top-nav {
@@ -83,12 +83,12 @@
     justify-content: center;
     align-items: center;
 }
-.contact-info{
+.contact-info{ 
  color: #f9f9f9;
  font-weight: 700;
  max-width: 500px;
  line-height: 65px;
- padding-left: 90px;
+ padding: 20px;
  font-size: 18px;
 
 }
@@ -111,8 +111,8 @@
     margin-bottom: 30px;
 }
 .contact-form .text-box{
-    background: #2f2e2e;
-    color: #fff;
+    background: #dbd9d9;
+    color: #000000;
     border: none;
     width: calc(50% - 10px);
     height: 50px;
@@ -127,8 +127,8 @@
     margin-right: 15px;
 }
 .contact-form textarea{
-    background: #2f2e2e;
-    color: #fff;
+    background: #dbd9d9;
+    color: #000000;
     border: none;
     width: 100%;
     padding: 12px;

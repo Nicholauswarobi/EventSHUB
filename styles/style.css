@@ -92,10 +92,11 @@
       overflow: hidden;
       z-index: 1000;
       width: 200px; /* Increased width to fit content in one line */
+      padding: 5px 0 5px 0;
     }
     .dropdown-content a {
       display: block;
-      padding: 10px 20px; /* Adjusted padding for better spacing */
+      padding: 10px 20px;
       text-decoration: none;
       color: #fff;
       font-size: 16px; /* Increased font size for dropdown items */
@@ -103,6 +104,7 @@
     }
     .dropdown-content a:hover {
       background: #3498db;
+      border-radius: 5px;
       color: white;
     }
     .dropdown:hover .dropdown-content {

@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Customer Dashboard - EventHub</title>
   <link rel="stylesheet" href="styles/userDashboard.css">
+  <link rel="stylesheet" href="styles/dash.css">
 </head>
 <body>
 
@@ -13,38 +14,44 @@
     <h1>Welcome to Your Dashboard</h1>
     <p>Manage your bookings, payments, and profile settings all in one place.</p>
   </div>
-
-  <!-- Dashboard Section -->
-  <div class="dashboard">
-    <!-- My Bookings -->
-    <div class="dashboard-card">
-      <h3>My Bookings</h3>
-      <p>View and manage your venue bookings.</p>
-      <a href="my-bookings.html">View Bookings</a>
+  <div class="container">
+    <class="content">
+      <div class="row">
+        <div class="card">
+          <a href="booking.html" class="card-link">
+            <h6>Bookings</h6>
+            <h3>15</h3>
+            <span class="text-success">+11%</span>
+          </a>
+        </div>
+      
+        <div class="card">
+          <a href="payment-history.html" class="card-link">
+            <h6>Payment History</h6>
+            <h3>15</h3>
+            <span class="text-danger">-14%</span>
+          </a>
+        </div>
+      </div>
     </div>
-
-    <!-- Saved Venues -->
-    <div class="dashboard-card">
-      <h3>Saved Venues</h3>
-      <p>View your wishlist and favorite venues.</p>
-      <a href="saved-venues.html">View Wishlist</a>
+    <div class=" half-width">
+      <h6>Recent Bookings Check Out</h6>
+      <table>
+        <thead>
+          <tr><th>Date</th><th>Venue</th><th>Location</th><th>Payment History</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>4/10/2025</td><td>Chimwaga</td><td>Dodoma</td><td>300,000 Tsh</td></tr>
+          <tr><td>10/11/2024</td><td>St.Gasper</td><td>Dodoma</td><td>500,000 Tsh</td></tr>
+          <tr><td>22/9/2023</td><td>Chinangali Park</td><td>Dodoma</td><td>350,000 Tsh</td></tr>
+        </tbody>
+      </table>
     </div>
+  </div>
+  
 
-    <!-- Payments -->
-    <div class="dashboard-card">
-      <h3>Payments</h3>
-      <p>Check your payment history and download invoices.</p>
-      <a href="payments.html">View Payments</a>
-    </div>
-
-    <!-- Profile Settings -->
-    <div class="dashboard-card">
-      <h3>Profile Settings</h3>
-      <p>Edit your personal information and change your password.</p>
-      <a href="profile-settings.html">Edit Profile</a>
-    </div>
-
-    <!-- Support -->
+<!-- 
+    Support
     <div class="dashboard-card">
       <h3>Support</h3>
       <p>Contact support or submit feedback.</p>
@@ -52,7 +59,7 @@
     </div>
   </div>
 
-  <!-- Footer Section -->
+  Footer Section -->
   <div class="footer">
     <p>&copy; 2025 EventHub. All rights reserved.</p>
   </div>
