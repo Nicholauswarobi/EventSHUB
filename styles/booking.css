@@ -48,15 +48,15 @@
 
   .top-nav a {
     text-decoration: none;
-    color: white; /* Change text color to white for better contrast */
+    color: white; 
     font-weight: bold;
     margin: 0 15px;
-    font-size: 18px; /* Increased font size */
+    font-size: 18px;
     transition: color 0.3s;
   }
 
   .top-nav a:hover {
-    color: #3498db; /* Lighter hover color for better visibility */
+    color: #3498db; 
   }
 
   /* Dropdown Menu */
@@ -73,15 +73,16 @@
       border-radius: 5px;
       overflow: hidden;
       z-index: 1000;
-      width: 200px; /* Increased width to fit content in one line */
-      padding: 5px 0 5px 0;/* Increased width to fit content in one line */
+      width: 200px; 
+      padding: 5px 0 5px 0;
+      
   }
   .dropdown-content a {
       display: block;
       padding: 10px;
       text-decoration: none;
       color: #fff;
-      font-size: 16px; /* Increased font size for dropdown items */
+      font-size: 16px;
       transition: background 0.3s, color 0.3s;
   }
 

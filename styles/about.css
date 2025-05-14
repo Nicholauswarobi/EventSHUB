@@ -7,12 +7,12 @@
 }
 /* Body Background */
 body {
-  background: #1c3a57; /* Gradient background */
+  background: #1c3a57; 
   color: #333;
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background-attachment: fixed; /* Keeps the background fixed during scrolling */
+  background-attachment: fixed; 
 }
 
 /* Optional: Add a semi-transparent overlay for better readability */
@@ -22,7 +22,7 @@ body {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.3); /* Dark overlay */
+  background: rgba(0, 0, 0, 0.3); 
   z-index: -1;
   position: sticky; 
 }
@@ -36,11 +36,11 @@ body {
 }
 .header h1 {
   font-size: 36px;
-  color: whitesmoke; /* White text for contrast */
+  color: whitesmoke; 
 }
 .header p {
   font-size: 18px;
-  color: whitesmoke; /* Light text for readability */
+  color: whitesmoke;
 }
 
 /* Navigation Bar */
@@ -85,8 +85,8 @@ body {
       border-radius: 5px;
       overflow: hidden;
       z-index: 1000;
-      width: 200px; /* Increased width to fit content in one line */
-      padding: 5px 0 5px 0;/* Increased width to fit content in one line */
+      width: 200px; 
+      padding: 5px 0 5px 0;
   }
   .dropdown-content a {
       display: block;

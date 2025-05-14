@@ -45,15 +45,15 @@ body {
 
   .top-nav a {
     text-decoration: none;
-    color: white; /* Change text color to white for better contrast */
+    color: white;
     font-weight: bold;
     margin: 0 15px;
-    font-size: 18px; /* Increased font size */
+    font-size: 18px;
     transition: color 0.3s;
   }
 
   .top-nav a:hover {
-    color: #3498db; /* Lighter hover color for better visibility */
+    color: #3498db;
   }
 
     /* Dropdown Menu */
