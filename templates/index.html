@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login & Registration</title>
+  <link rel="stylesheet" href="/static/styles/eventHub-login.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Login Form -->
+    <div id="loginForm" class="form-group {% if form == 'login' %}active{% endif %}">
+      <h2>Welcome to EventHub</h2>
+      <input type="text" id="loginUsername" placeholder="Username" required>
+      <input type="password" id="loginPassword" placeholder="Password" required>
+      <button onclick="login()">Login</button>
+      <div class="toggle">
+        Don't have an account? <a href="/index?form=register">Register</a>
+      </div>
+    </div>
+
+    <!-- Registration Form -->
+    <div id="registerForm" class="form-group {% if form == 'register' %}active{% endif %}">
+      <h2>Register</h2>
+      <input type="text" id="regUsername" placeholder="Username" required>
+      <input type="email" id="regEmail" placeholder="Email" required>
+      <input type="password" id="regPassword" placeholder="Password" required>
+      <button onclick="register()">Register</button>
+      <div class="toggle">
+        Already have an account? <a href="/index?form=login">Login</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/scripts/index.js"></script>
+</body>
+</html>

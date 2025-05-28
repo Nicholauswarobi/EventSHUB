@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EventHub - Discover Venues</title>
+  <link rel="stylesheet" href="/static/styles/style.css">
+</head>
+<body>
+  <!-- Background Overlay -->
+  <div class="overlay"></div>
+
+  <!-- Navigation Bar -->
+  <!-- <div class="top-nav">
+    
+    {% if user_signed_in %}
+    <a href="/userdashboard">Dashboard</a>
+    {% endif %}
+    <a href="/venues">Venues</a>
+    <div class="dropdown">
+      <a href="/events" class="dropdown-toggle">Events &#9662;</a>
+      <div class="dropdown-content">
+        <a href="#">Weddings</a>
+        <a href="#">Corporate Events</a>
+        <a href="#">Birthday Parties</a>
+        <a href="#">Concerts</a>
+        <a href="#">Workshops</a>
+        <a href="#">Exhibitions</a>
+        <a href="/events">All Events</a>
+      </div>
+    </div>
+    <a href="/about">About</a>
+    <a href="/contact">Contact</a> -->
+    
+    
+  <div class="top-nav">
+    <div class="header"><h1>EVENTSHUB</h1></div>
+
+    <!-- <a href="{{ url_for('eventhub') }}">Home</a> -->
+    {% if user_signed_in %}
+    <a href="{{ url_for('user_dashboard') }}">Dashboard</a>
+    {% endif %}
+    <a href="{{ url_for('venues') }}">Venues</a>
+<div class="dropdown">
+    <a href="{{ url_for('events') }}" class="dropdown-toggle">Events &#9662;</a>
+    <div class="dropdown-content">
+    <a href="#">Weddings</a>
+    <a href="#">Corporate Events</a>
+    <a href="#">Birthday Parties</a>
+    <a href="#">Concerts</a>
+    <a href="#">Workshops</a>
+    <a href="#">Exhibitions</a>
+    <a href="{{ url_for('events') }}">All Events</a>
+    </div>
+</div>
+    <a href="{{ url_for('about') }}">About</a>
+    <a href="{{ url_for('contact') }}">Contact</a>
+
+
+    <!-- Sign In and Sign Out Buttons -->
+    {% if user_signed_in %}
+      <a href="/logout" class="btn btn-signout">Sign Out</a>
+    {% else %}
+      <div id="authButtons" class="auth-buttons">
+        <a href="/index?form=login" class="btn btn-signin">Sign In</a>
+        <a href="/index?form=register" class="btn btn-signup">Sign Up</a>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- Main Content Wrapper -->
+  <main>
+    <!-- Section Title -->
+    <div class="section-title">Venue Recommendations</div>
+
+    <!-- Carousel Section -->
+    <div class="carousel-container">
+      <div class="carousel-track" id="carouselTrack">
+        <div class="venue-card behind">
+          <img src="/static/images/pexels-amar-14716282.jpg" alt="Venue 1">
+          <h4>Crystal Hall</h4>
+        </div>
+        <div class="venue-card left">
+          <img src="/static/images/pexels-gnasralla-3866658.jpg" alt="Venue 2">
+          <h4>Grand Plaza</h4>
+        </div>
+        <div class="venue-card active">
+          <img src="/static/images/pexels-rosario-fernandes-26325-3835638.jpg" alt="Venue 3">
+          <h4>Royal Garden</h4>
+        </div>
+        <div class="venue-card right">
+          <img src="/static/images\pexels-bertellifotografia-16120232.jpg" alt="Venue 4">
+          <h4>Sunset Hall</h4>
+        </div>
+        <div class="venue-card behind">
+          <img src="/static/images\pexels-pixabay-159213.jpg" alt="Venue 5">
+          <h4>Emerald Hall</h4>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer Section -->
+  <div class="footer">
+    <p>&copy; 2025 EventHub. All rights reserved.</p>
+    <div class="contact-us">
+      <h2>Contact Us</h2>
+      <p>We’d love to hear from you! Connect with us on social media or reach out directly.</p>
+      <div class="social-icons">
+        <a href="https://www.instagram.com" target="_blank">
+          <img src="/static/images/6929237_instagram_icon.png" alt="Instagram" class="icon">
+        </a>
+        <a href="https://www.twitter.com" target="_blank">
+          <img src="/static/images/twitter.png" alt="X (Twitter)" class="icon">
+        </a>
+        <a href="https://www.facebook.com" target="_blank">
+          <img src="/static/images/5296499_fb_facebook_facebook logo_icon.png" alt="Facebook" class="icon">
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/scripts/EventHub.js"></script>
+</body>
+</html>
+

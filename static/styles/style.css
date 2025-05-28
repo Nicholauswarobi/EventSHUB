@@ -1,4 +1,4 @@
-    /* General Reset */
+/* General Reset */
     * {
       box-sizing: border-box;
       margin: 0;
@@ -349,4 +349,45 @@
   width: 100%;
   height: 100%;
   object-fit: contain;
+}
+
+/* Auth Buttons Container */
+.auth-buttons {
+  display: flex;
+  gap: 10px; /* Space between buttons */
+  justify-content: flex-end; /* Align buttons to the right */
+  margin-right: 20px; /* Add some spacing from the edge */
+}
+
+/* General Button Styles */
+.auth-buttons .btn {
+  padding: 10px 20px;
+  font-size: 16px;
+  font-weight: bold;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+/* Sign In Button */
+.auth-buttons .btn-signin {
+  background-color: #007bff; /* Blue */
+  color: white;
+}
+
+.auth-buttons .btn-signin:hover {
+  background-color: #0056b3; /* Darker blue */
+  transform: scale(1.05); /* Slightly enlarge on hover */
+}
+
+/* Sign Up Button */
+.auth-buttons .btn-signup {
+  background-color: #28a745; /* Green */
+  color: white;
+}
+
+.auth-buttons .btn-signup:hover {
+  background-color: #1e7e34; /* Darker green */
+  transform: scale(1.05); /* Slightly enlarge on hover */
 }

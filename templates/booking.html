@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>Booking - EventHub</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="/styles/booking.css">
+  <link rel="stylesheet" href="/static/styles/booking.css">
 </head>
 <body>
    <!-- Header Section -->
@@ -15,24 +15,24 @@
   <hr>
 
     <!-- Navigation Bar -->
-  <div class="top-nav">
-    <a href="EventHub.html">Home</a>
-    <a href="Userdashboard.html">Dashboard</a>
-    <a href="venues.html">Venues</a>
-    <div class="dropdown">
-      <a href="Events.html" class="dropdown-toggle">Events &#9662;</a>
-      <div class="dropdown-content">
-        <a href="#">Weddings</a>
-        <a href="#">Corporate Events</a>
-        <a href="#">Birthday Parties</a>
-        <a href="#">Concerts</a>
-        <a href="#">Workshops</a>
-        <a href="#">Exhibitions</a>
-        <a href="Events.html">All Events</a>
-      </div>
+    <div class="top-nav">
+    <a href="{{ url_for('eventhub') }}">Home</a>
+    <a href="{{ url_for('user_dashboard') }}">Dashboard</a>
+    <a href="{{ url_for('venues') }}">Venues</a>
+<div class="dropdown">
+    <a href="{{ url_for('events') }}" class="dropdown-toggle">Events &#9662;</a>
+    <div class="dropdown-content">
+    <a href="#">Weddings</a>
+    <a href="#">Corporate Events</a>
+    <a href="#">Birthday Parties</a>
+    <a href="#">Concerts</a>
+    <a href="#">Workshops</a>
+    <a href="#">Exhibitions</a>
+    <a href="{{ url_for('events') }}">All Events</a>
     </div>
-    <a href="/template/about.html">About</a>
-    <a href="contact.html">Contact</a>
+</div>
+    <a href="{{ url_for('about') }}">About</a>
+    <a href="{{ url_for('contact') }}">Contact</a>
   </div>
 
   <div class="card half-width">
@@ -129,13 +129,13 @@
     <p>We’d love to hear from you! Connect with us on social media or reach out directly.</p>
     <div class="social-icons">
       <a href="https://www.instagram.com" target="_blank">
-        <img src="/images/6929237_instagram_icon.png" alt="Instagram" class="icon">
+        <img src="/static/images/6929237_instagram_icon.png" alt="Instagram" class="icon">
       </a>
       <a href="https://www.twitter.com" target="_blank">
-        <img src="/images/twitter.png" alt="X (Twitter)" class="icon">
+        <img src="/static/images/twitter.png" alt="X (Twitter)" class="icon">
       </a>
       <a href="https://www.facebook.com" target="_blank">
-        <img src="/images/5296499_fb_facebook_facebook logo_icon.png" alt="Facebook" class="icon">
+        <img src="/static/images/5296499_fb_facebook_facebook logo_icon.png" alt="Facebook" class="icon">
       </a>
     </div>
   </div>

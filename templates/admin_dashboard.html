@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles/admin.css') }}">
+  <link rel="stylesheet" href="/static/styles/admin.css">
+</head>
+<body>
+  <!-- Background Overlay -->
+  <div class="overlay"></div>
+
+  <!-- Header Section -->
+  <header class="header">
+    <h1>Admin Dashboard</h1>
+    <p>Manage your platform efficiently</p>
+  </header>
+
+  <!-- Metrics Section -->
+  <main>
+    <div class="metrics">
+      <div class="metric-card">
+        <h5>Total Members</h5>
+        <h3>{{ total_users }}</h3>
+      </div>
+      <div class="metric-card">
+        <h5>Available Venues</h5>
+        <h3>{{ available_venues }}</h3>
+      </div>
+      <div class="metric-card">
+        <h5>Total Vendors</h5>
+        <h3>{{ total_vendors }}</h3>
+      </div>
+      <div class="metric-card">
+        <h5>Total Services</h5>
+        <h3>{{ total_services }}</h3>
+      </div>
+      <div class="metric-card">
+        <h5>Booked Venues</h5>
+        <h3>{{ booked_venues }}</h3>
+      </div>
+    </div>
+
+    <!-- Add Details Button -->
+    <div class="actions">
+      <button class="btn" onclick="openModal('addDetailsModal')">Add Details</button>
+    </div>
+  </main>
+
+  <!-- Add Details Modal -->
+  <div class="modal" id="addDetailsModal">
+    <div class="modal-content">
+      <span class="close" onclick="closeModal('addDetailsModal')">&times;</span>
+      <h2>Add Details</h2>
+
+      <!-- Tab Navigation -->
+      <div class="tab-container">
+        <button class="tab-btn active" onclick="openTab(event, 'locationTab')">Add Location</button>
+        <button class="tab-btn" onclick="openTab(event, 'venueTab')">Add Venue</button>
+        <button class="tab-btn" onclick="openTab(event, 'serviceTab')">Add Service</button>
+        <button class="tab-btn" onclick="openTab(event, 'eventTab')">Add Event</button>
+      </div>
+
+      <!-- Tab Content -->
+      <div id="locationTab" class="tab-content active">
+        <form method="POST" action="/admin">
+          <h3>Add Location</h3>
+          <input type="text" name="address" placeholder="Address" required>
+          <input type="text" name="city" placeholder="City" required>
+          <input type="text" name="state" placeholder="State">
+          <input type="text" name="country" placeholder="Country" required>
+          <button type="submit" name="submit_location">Submit Location</button>
+        </form>
+      </div>
+
+      <div id="venueTab" class="tab-content">
+        <form method="POST" action="/admin">
+          <h3>Add Venue</h3>
+          <input type="text" name="venue_name" placeholder="Venue Name" required>
+          <textarea name="venue_description" placeholder="Description"></textarea>
+          <input type="number" name="venue_capacity" placeholder="Capacity" required>
+          <input type="number" step="0.01" name="venue_price" placeholder="Price" required>
+          <select name="location_id" required>
+            <option value="" disabled selected>Select Location</option>
+            {% for location in locations %}
+              <option value="{{ location.id }}">{{ location.address }}, {{ location.city }}</option>
+            {% endfor %}
+          </select>
+          <button type="submit" name="submit_venue">Submit Venue</button>
+        </form>
+      </div>
+
+      <div id="serviceTab" class="tab-content">
+        <form method="POST" action="/admin">
+          <h3>Add Service</h3>
+          <input type="text" name="service_name" placeholder="Service Name" required>
+          <textarea name="service_description" placeholder="Description"></textarea>
+          <input type="number" step="0.01" name="service_price" placeholder="Price" required>
+          <button type="submit" name="submit_service">Submit Service</button>
+        </form>
+      </div>
+
+      <div id="eventTab" class="tab-content">
+        <form method="POST" action="/admin">
+          <h3>Add Event</h3>
+          <input type="text" name="event_name" placeholder="Event Name" required>
+          <textarea name="event_description" placeholder="Description"></textarea>
+          <input type="date" name="event_date" required>
+          <select name="event_venue_id" required>
+            <option value="" disabled selected>Select Venue</option>
+            {% for venue in venues %}
+              <option value="{{ venue.id }}">{{ venue.name }}</option>
+            {% endfor %}
+          </select>
+          <select name="event_service_id">
+            <option value="" disabled selected>Select Service (Optional)</option>
+            {% for service in services %}
+              <option value="{{ service.id }}">{{ service.name }}</option>
+            {% endfor %}
+          </select>
+          <button type="submit" name="submit_event">Submit Event</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer Section -->
+  <footer class="footer">
+    <p>&copy; 2025 EventHub. All rights reserved.</p>
+  </footer>
+
+  <!-- JavaScript -->
+  <script src="/static/scripts/admin.js"></script>
+</body>
+</html>

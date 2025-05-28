@@ -4,8 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Customer Dashboard - EventHub</title>
-  <link rel="stylesheet" href="/styles/userDashboard.css">
-  <link rel="stylesheet" href="/styles/dash.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles/userDashboard.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles/dash.css') }}">
+
 </head>
 <body>
 
@@ -17,30 +18,30 @@
   <hr>
 
   <!-- Navigation Bar -->
-  <div class="top-nav">
-    <a href="/template/EventHub.html">Home</a>
-    <a href="/template/venues.html">Venues</a>
-    <div class="dropdown">
-      <a href="/template/Events.html" class="dropdown-toggle">Events &#9662;</a>
-      <div class="dropdown-content">
-        <a href="#">Weddings</a>
-        <a href="#">Corporate Events</a>
-        <a href="#">Birthday Parties</a>
-        <a href="#">Concerts</a>
-        <a href="#">Workshops</a>
-        <a href="#">Exhibitions</a>
-        <a href="/template/Events.html">All Events</a>
-      </div>
+    <div class="top-nav">
+    <a href="{{ url_for('eventhub') }}">Home</a>
+    <a href="{{ url_for('venues') }}">Venues</a>
+<div class="dropdown">
+    <a href="{{ url_for('events') }}" class="dropdown-toggle">Events &#9662;</a>
+    <div class="dropdown-content">
+    <a href="#">Weddings</a>
+    <a href="#">Corporate Events</a>
+    <a href="#">Birthday Parties</a>
+    <a href="#">Concerts</a>
+    <a href="#">Workshops</a>
+    <a href="#">Exhibitions</a>
+    <a href="{{ url_for('events') }}">All Events</a>
     </div>
-    <a href="/template/about.html">About</a>
-    <a href="/template/Contact.html">Contact</a>
+</div>
+    <a href="{{ url_for('about') }}">About</a>
+    <a href="{{ url_for('contact') }}">Contact</a>
   </div>
 
   <div class="container">
     <class="content">
       <div class="row">
         <div class="card">
-          <a href="/template/booking.html" class="card-link">
+          <a href="{{ url_for('booking')}}" class="card-link">
             <h6>Bookings</h6>
             <h3>15</h3>
             <span class="text-success">+11%</span>
@@ -81,13 +82,13 @@
     <p>We’d love to hear from you! Connect with us on social media or reach out directly.</p>
     <div class="social-icons">
       <a href="https://www.instagram.com" target="_blank">
-        <img src="/images/6929237_instagram_icon.png" alt="Instagram" class="icon">
+        <img src="{{ url_for('static', filename='images/6929237_instagram_icon.png') }}" alt="Instagram">
       </a>
       <a href="https://www.twitter.com" target="_blank">
-        <img src="/images/twitter.png" alt="X (Twitter)" class="icon">
+        <img src="{{ url_for('static', filename='images/twitter.png') }}" alt="Twitter">
       </a>
       <a href="https://www.facebook.com" target="_blank">
-        <img src="/images/5296499_fb_facebook_facebook logo_icon.png" alt="Facebook" class="icon">
+        <img src="{{ url_for('static', filename='images/5296499_fb_facebook_facebook logo_icon.png') }}" alt="Facebook">
       </a>
     </div>
   </div>
@@ -95,3 +96,5 @@
 
 </body>
 </html>
+
+
