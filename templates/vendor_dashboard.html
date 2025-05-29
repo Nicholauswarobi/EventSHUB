@@ -3,38 +3,35 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Dashboard</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='styles/admin.css') }}">
+  <title>Vendor Dashboard</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles/vendor.css') }}">
   <link rel="stylesheet" href="/static/styles/admin.css">
 </head>
 <body>
-  <!-- Background Overlay -->
-  <div class="overlay"></div>
-
   <!-- Header Section -->
   <header class="header">
-    <h1>Admin Dashboard</h1>
-    <p>Manage your platform efficiently</p>
+    <h1>Vendor Dashboard</h1>
+    <p>Manage your services and bookings efficiently</p>
   </header>
 
   <!-- Metrics Section -->
   <main>
     <div class="metrics">
       <div class="metric-card">
-        <h5>Total Members</h5>
-        <h3>{{ total_users }}</h3>
+        <h5>Total Services</h5>
+        <h3>{{ total_services }}</h3>
+      </div>
+      <div class="metric-card">
+        <h5>Booked Services</h5>
+        <h3>{{ booked_services }}</h3>
+      </div>
+      <div class="metric-card">
+        <h5>Total Bookings</h5>
+        <h3>{{ total_bookings }}</h3>
       </div>
       <div class="metric-card">
         <h5>Available Venues</h5>
         <h3>{{ available_venues }}</h3>
-      </div>
-      <div class="metric-card">
-        <h5>Total Vendors</h5>
-        <h3>{{ total_vendors }}</h3>
-      </div>
-      <div class="metric-card">
-        <h5>Total Services</h5>
-        <h3>{{ total_services }}</h3>
       </div>
       <div class="metric-card">
         <h5>Booked Venues</h5>
@@ -42,18 +39,17 @@
       </div>
     </div>
 
-    <!-- Add Details Button -->
+    <!-- Manage Services Button -->
     <div class="actions">
-      <button class="btn" onclick="openModal('addDetailsModal')">Add Details</button>
+      <button class="btn" onclick="openModal('manageServicesModal')">Manage Services</button>
     </div>
-
   </main>
 
-  <!-- Add Details Modal -->
-  <div class="modal" id="addDetailsModal">
+  <!-- Manage Services Modal -->
+  <div class="modal" id="manageServicesModal">
     <div class="modal-content">
-      <span class="close" onclick="closeModal('addDetailsModal')">&times;</span>
-      <h2>Add Details</h2>
+      <span class="close" onclick="closeModal('manageServicesModal')">&times;</span>
+      <h2>Manage Services</h2>
 
       <!-- Tab Navigation -->
       <div class="tab-container">
@@ -66,7 +62,7 @@
       <!-- Tab Content -->
       <!-- Location Tab -->
       <div id="locationTab" class="tab-content active">
-        <form method="POST" action="/add_location" onsubmit="handleFormSubmit(event, 'locationTab', 'venueTab', 'addDetailsModal')">
+        <form method="POST" action="/add_location" onsubmit="handleFormSubmit(event, 'locationTab', 'venueTab', 'manageServicesModal')">
           <h3>Add Location</h3>
           <input type="text" name="address" placeholder="Address" required>
           <input type="text" name="city" placeholder="City" required>
@@ -78,7 +74,7 @@
 
       <!-- Venue Tab -->
       <div id="venueTab" class="tab-content">
-        <form method="POST" action="/add_venue" onsubmit="handleFormSubmit(event, 'venueTab', 'serviceTab', 'addDetailsModal')">
+        <form method="POST" action="/add_venue" onsubmit="handleFormSubmit(event, 'venueTab', 'serviceTab', 'manageServicesModal')">
           <h3>Add Venue</h3>
           <input type="text" name="venue_name" placeholder="Venue Name" required>
           <textarea name="venue_description" placeholder="Description"></textarea>
@@ -86,7 +82,7 @@
           <input type="number" step="0.01" name="venue_price" placeholder="Price" required>
           <select name="location_id" required>
             <option value="" disabled selected>Select Location</option>
-            {% for location in all_locations %}
+            {% for location in vendor_locations %}
               <option value="{{ location.id }}">{{ location.address }}, {{ location.city }}</option>
             {% endfor %}
           </select>
@@ -96,7 +92,7 @@
 
       <!-- Service Tab -->
       <div id="serviceTab" class="tab-content">
-        <form method="POST" action="/add_service" onsubmit="handleFormSubmit(event, 'serviceTab', 'eventTab', 'addDetailsModal')">
+        <form method="POST" action="/add_service" onsubmit="handleFormSubmit(event, 'serviceTab', 'eventTab', 'manageServicesModal')">
           <h3>Add Service</h3>
           <input type="text" name="service_name" placeholder="Service Name" required>
           <textarea name="service_description" placeholder="Description"></textarea>
@@ -107,20 +103,20 @@
 
       <!-- Event Tab -->
       <div id="eventTab" class="tab-content">
-        <form method="POST" action="/add_event" onsubmit="handleFormSubmit(event, 'eventTab', null, 'addDetailsModal')">
+        <form method="POST" action="/add_event" onsubmit="handleFormSubmit(event, 'eventTab', null, 'manageServicesModal')">
           <h3>Add Event</h3>
           <input type="text" name="event_name" placeholder="Event Name" required>
           <textarea name="event_description" placeholder="Description"></textarea>
           <input type="date" name="event_date" required>
           <select name="event_venue_id" required>
             <option value="" disabled selected>Select Venue</option>
-            {% for venue in all_venues %}
+            {% for venue in vendor_venues %}
               <option value="{{ venue.id }}">{{ venue.name }}</option>
             {% endfor %}
           </select>
           <select name="event_service_id">
             <option value="" disabled selected>Select Service (Optional)</option>
-            {% for service in all_services %}
+            {% for service in vendor_services %}
               <option value="{{ service.id }}">{{ service.name }}</option>
             {% endfor %}
           </select>
@@ -136,6 +132,6 @@
   </footer>
 
   <!-- JavaScript -->
-  <script src="/static/scripts/admin.js"></script>
+  <script src="{{ url_for('static', filename='scripts/vendor.js') }}"></script>
 </body>
 </html>

@@ -27,12 +27,14 @@ async function login() {
       body: JSON.stringify({ username, password }),
     });
 
-    const data = await response.json();
-    if (response.ok) {
-      alert(data.message);
-      window.location.href = '/'; // Redirect to the EventHub page
+    if (response.redirected) {
+      // Redirect to the URL provided by the backend
+      window.location.href = response.url;
     } else {
-      alert(data.error);
+      const data = await response.json();
+      if (data.error) {
+        alert(data.error); // Display error message
+      }
     }
   } catch (error) {
     console.error('Error:', error);
@@ -44,8 +46,9 @@ async function register() {
   const username = document.getElementById('regUsername').value;
   const email = document.getElementById('regEmail').value;
   const password = document.getElementById('regPassword').value;
+  const role = document.getElementById('userRole').value; // Ensure the correct ID is used
 
-  if (!username || !email || !password) {
+  if (!username || !email || !password || !role) {
     alert('Please fill in all fields');
     return;
   }
@@ -54,13 +57,13 @@ async function register() {
     const response = await fetch('/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, email, password }),
+      body: JSON.stringify({ username, email, password, role }),
     });
 
     const data = await response.json();
     if (response.ok) {
       alert(data.message);
-      toggleForm('login'); // Switch to login form after registration
+      window.location.href = '/index?form=login'; // Redirect to login page after registration
     } else {
       alert(data.error);
     }

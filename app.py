@@ -47,13 +47,80 @@ def create_tables():
             id INT AUTO_INCREMENT PRIMARY KEY,
             username VARCHAR(80) NOT NULL UNIQUE,
             email VARCHAR(120) NOT NULL UNIQUE,
-            password VARCHAR(200) NOT NULL
+            password VARCHAR(200) NOT NULL,
+            role ENUM('user', 'vendor') DEFAULT 'user'
         )
         """)
 
-        # Create locations table
+        # Create vendor_locations table
         cursor.execute("""
-        CREATE TABLE IF NOT EXISTS locations (
+        CREATE TABLE IF NOT EXISTS vendor_locations (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            address VARCHAR(255) NOT NULL,
+            city VARCHAR(100) NOT NULL,
+            state VARCHAR(100),
+            country VARCHAR(100) NOT NULL,
+            vendor_id INT NOT NULL,  -- Track which vendor added the location
+            FOREIGN KEY (vendor_id) REFERENCES users(id)
+        )
+        """)
+
+        # Create vendor_venues table with a status column
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS vendor_venues (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            location_id INT NOT NULL,
+            name VARCHAR(120) NOT NULL UNIQUE,
+            description TEXT,
+            capacity INT NOT NULL,
+            price DECIMAL(10, 2) NOT NULL,
+            vendor_id INT NOT NULL,
+            status ENUM('available', 'booked') DEFAULT 'available',  -- Track venue availability
+            FOREIGN KEY (location_id) REFERENCES vendor_locations(id),
+            FOREIGN KEY (vendor_id) REFERENCES users(id)
+        )
+        """)
+
+        
+
+
+
+        # Create vendor_services table
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS vendor_services (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            name VARCHAR(120) NOT NULL UNIQUE,
+            description TEXT,
+            price DECIMAL(10, 2) NOT NULL,
+            vendor_id INT NOT NULL,  -- Track which vendor added the service
+            FOREIGN KEY (vendor_id) REFERENCES users(id)
+        )
+        """)
+
+
+
+        # Create vendor_events table
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS vendor_events (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            name VARCHAR(120) NOT NULL UNIQUE,
+            description TEXT,
+            date DATE NOT NULL,
+            venue_id INT NOT NULL,
+            service_id INT NOT NULL,
+            vendor_id INT NOT NULL,  -- Track which vendor added the event
+            FOREIGN KEY (venue_id) REFERENCES vendor_venues(id),
+            FOREIGN KEY (service_id) REFERENCES vendor_services(id),
+            FOREIGN KEY (vendor_id) REFERENCES users(id)
+        )
+        """)
+
+
+
+
+        # Create admin_locations table
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS admin_locations (
             id INT AUTO_INCREMENT PRIMARY KEY,
             address VARCHAR(255) NOT NULL,
             city VARCHAR(100) NOT NULL,
@@ -62,22 +129,25 @@ def create_tables():
         )
         """)
 
-        # Create venues table
+        # Create admin_venues table
         cursor.execute("""
-        CREATE TABLE IF NOT EXISTS venues (
+        CREATE TABLE IF NOT EXISTS admin_venues (
             id INT AUTO_INCREMENT PRIMARY KEY,
             location_id INT NOT NULL,
             name VARCHAR(120) NOT NULL UNIQUE,
             description TEXT,
             capacity INT NOT NULL,
             price DECIMAL(10, 2) NOT NULL,
-            FOREIGN KEY (location_id) REFERENCES locations(id)
+            status ENUM('available', 'booked') DEFAULT 'available',        
+            FOREIGN KEY (location_id) REFERENCES admin_locations(id)
         )
         """)
 
-        # Create services table
+ 
+
+        # Create admin_services table
         cursor.execute("""
-        CREATE TABLE IF NOT EXISTS services (
+        CREATE TABLE IF NOT EXISTS admin_services (
             id INT AUTO_INCREMENT PRIMARY KEY,
             name VARCHAR(120) NOT NULL UNIQUE,
             description TEXT,
@@ -85,43 +155,40 @@ def create_tables():
         )
         """)
 
-        # Create events table
+
+
+        # Create admin_events table
         cursor.execute("""
-        CREATE TABLE IF NOT EXISTS events (
+        CREATE TABLE IF NOT EXISTS admin_events (
             id INT AUTO_INCREMENT PRIMARY KEY,
             name VARCHAR(120) NOT NULL UNIQUE,
             description TEXT,
             date DATE NOT NULL,
             venue_id INT NOT NULL,
             service_id INT NOT NULL,
-            FOREIGN KEY (venue_id) REFERENCES venues(id),
-            FOREIGN KEY (service_id) REFERENCES services(id)
+            FOREIGN KEY (venue_id) REFERENCES admin_venues(id),
+            FOREIGN KEY (service_id) REFERENCES admin_services(id)
         )
         """)
+
 
         # Create bookings table
         cursor.execute("""
         CREATE TABLE IF NOT EXISTS bookings (
             id INT AUTO_INCREMENT PRIMARY KEY,
             user_id INT NOT NULL,
-            event_id INT NOT NULL,
-            date DATE NOT NULL,
+            vendor_id INT NOT NULL,
+            venue_id INT,
+            service_id INT,
+            booking_date DATE NOT NULL,
             FOREIGN KEY (user_id) REFERENCES users(id),
-            FOREIGN KEY (event_id) REFERENCES events(id)
+            FOREIGN KEY (vendor_id) REFERENCES users(id),
+            FOREIGN KEY (venue_id) REFERENCES vendor_venues(id),
+            FOREIGN KEY (service_id) REFERENCES vendor_services(id)
         )
         """)
 
-        # Create payments table
-        cursor.execute("""
-        CREATE TABLE IF NOT EXISTS payments (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            booking_id INT NOT NULL,
-            amount DECIMAL(10, 2) NOT NULL,
-            payment_date DATE NOT NULL,
-            status VARCHAR(50) NOT NULL,
-            FOREIGN KEY (booking_id) REFERENCES bookings(id)
-        )
-        """)
+
 
         print("Tables created or already exist.")
         cursor.close()
@@ -156,6 +223,9 @@ def register():
         username = data['username']
         email = data['email']
         password = data['password']
+        role = data['role']  # Get the selected role (user or vendor)
+
+        print(f"Registering user: {username}, Email: {email}, Role: {role}")  # Debug log
 
         # Hash the password
         hashed_password = generate_password_hash(password)
@@ -163,11 +233,11 @@ def register():
         connection = connection_pool.get_connection()
         cursor = connection.cursor()
 
-        # Insert user into the database
+        # Insert user into the database with the selected role
         cursor.execute("""
-        INSERT INTO users (username, email, password)
-        VALUES (%s, %s, %s)
-        """, (username, email, hashed_password))
+        INSERT INTO users (username, email, password, role)
+        VALUES (%s, %s, %s, %s)
+        """, (username, email, hashed_password, role))
         connection.commit()
 
         cursor.close()
@@ -175,6 +245,7 @@ def register():
 
         return jsonify({"message": "User registered successfully!"}), 201
     except mysql.connector.Error as err:
+        print(f"Database error: {err}")  # Debug log
         return jsonify({"error": str(err)}), 400
 
 # Route for user login
@@ -185,10 +256,19 @@ def login():
         username = data['username']
         password = data['password']
 
+        print(f"Username: {username}, Password: {password}")  # Debug log
+
+        # Check if the user is the hardcoded admin
+        if username == HARD_CODED_ADMIN['username'] and password == HARD_CODED_ADMIN['password']:
+            session['user_signed_in'] = True
+            session['user_role'] = 'admin'  # Hardcoded admin role
+            print("Admin login successful. Redirecting to admin dashboard.")  # Debug log
+            return redirect(url_for('admin_dashboard'))
+
+        # Check the database for regular users or vendors
         connection = connection_pool.get_connection()
         cursor = connection.cursor(dictionary=True)
 
-        # Fetch user from the database
         cursor.execute("SELECT * FROM users WHERE username = %s", (username,))
         user = cursor.fetchone()
 
@@ -196,11 +276,22 @@ def login():
         connection.close()
 
         if user and check_password_hash(user['password'], password):
-            session['user_signed_in'] = True  # Set session to indicate user is signed in
-            return jsonify({"message": "Login successful!"}), 200
+            session['user_signed_in'] = True
+            session['user_role'] = user.get('role', 'user')  # Default to 'user' if no role is set
+            session['user_id'] = user['id']  # Set user_id in session
+
+            # Redirect based on role
+            if session['user_role'] == 'vendor':
+                print("Vendor login successful. Redirecting to vendor dashboard.")  # Debug log
+                return redirect(url_for('vendor_dashboard'))
+            else:
+                print("User login successful. Redirecting to EventHub.")  # Debug log
+                return redirect(url_for('eventhub'))
         else:
+            print("Invalid username or password.")  # Debug log
             return jsonify({"error": "Invalid username or password"}), 401
     except mysql.connector.Error as err:
+        print(f"Database error: {err}")  # Debug log
         return jsonify({"error": str(err)}), 400
 
 @app.route('/logout')
@@ -214,12 +305,14 @@ def eventhub():
     user_signed_in = session.get('user_signed_in', False)
     return render_template('EventHub.html', user_signed_in=user_signed_in)
 
-
 @app.route('/userdashboard')
 def user_dashboard():
     user_signed_in = session.get('user_signed_in', False)
     if not user_signed_in:
         return redirect(url_for('eventhub'))  # Redirect to login if not signed in
+    return render_template('Userdashboard.html', user_signed_in=user_signed_in)
+
+    print("User access granted. Rendering user dashboard.")  # Debug log
     return render_template('Userdashboard.html', user_signed_in=user_signed_in)
 
 @app.route('/venues')
@@ -255,103 +348,83 @@ def index():
 
 @app.route('/admin', methods=['GET', 'POST'])
 def admin_dashboard():
+    if not session.get('user_signed_in') or session.get('user_role') != 'admin':
+        return redirect(url_for('eventhub'))  # Redirect if unauthorized
+
     connection = connection_pool.get_connection()
     cursor = connection.cursor(dictionary=True)
 
-    if request.method == 'POST':
-        try:
-            print("Form data received:", request.form)  # Log the form data
-
-            # Handle Add Location Form
-            if 'submit_location' in request.form:
-                address = request.form.get('address')
-                city = request.form.get('city')
-                state = request.form.get('state')
-                country = request.form.get('country')
-                print(f"Adding location: {address}, {city}, {state}, {country}")  # Debug log
-                if address and city and country:
-                    cursor.execute("""
-                        INSERT INTO locations (address, city, state, country)
-                        VALUES (%s, %s, %s, %s)
-                    """, (address, city, state, country))
-                    connection.commit()
-
-            # Handle Add Venue Form
-            elif 'submit_venue' in request.form:
-                venue_name = request.form.get('venue_name')
-                venue_description = request.form.get('venue_description')
-                venue_capacity = request.form.get('venue_capacity')
-                venue_price = request.form.get('venue_price')
-                location_id = request.form.get('location_id')
-                print(f"Adding venue: {venue_name}, {venue_description}, {venue_capacity}, {venue_price}, {location_id}")  # Debug log
-                if venue_name and venue_capacity and venue_price and location_id:
-                    cursor.execute("""
-                        INSERT INTO venues (name, description, capacity, price, location_id)
-                        VALUES (%s, %s, %s, %s, %s)
-                    """, (venue_name, venue_description, venue_capacity, venue_price, location_id))
-                    connection.commit()
-
-            # Handle Add Service Form
-            elif 'submit_service' in request.form:
-                service_name = request.form.get('service_name')
-                service_description = request.form.get('service_description')
-                service_price = request.form.get('service_price')
-                print(f"Adding service: {service_name}, {service_description}, {service_price}")  # Debug log
-                if service_name and service_price:
-                    cursor.execute("""
-                        INSERT INTO services (name, description, price)
-                        VALUES (%s, %s, %s)
-                    """, (service_name, service_description, service_price))
-                    connection.commit()
-
-            # Handle Add Event Form
-            elif 'submit_event' in request.form:
-                event_name = request.form.get('event_name')
-                event_description = request.form.get('event_description')
-                event_date = request.form.get('event_date')
-                event_venue_id = request.form.get('event_venue_id')
-                event_service_id = request.form.get('event_service_id')
-                print(f"Adding event: {event_name}, {event_description}, {event_date}, {event_venue_id}, {event_service_id}")  # Debug log
-                if event_name and event_date and event_venue_id:
-                    cursor.execute("""
-                        INSERT INTO events (name, description, date, venue_id, service_id)
-                        VALUES (%s, %s, %s, %s, %s)
-                    """, (event_name, event_description, event_date, event_venue_id, event_service_id))
-                    connection.commit()
-
-        except Exception as e:
-            print(f"Error: {e}")  # Log the error to the console
-            return "An error occurred while processing your request. Please try again later.", 500
-        finally:
-            cursor.close()
-            connection.close()
-
-        return redirect(url_for('admin_dashboard'))
-
-    # Fetch metrics and dropdown data
-    cursor.execute("SELECT COUNT(*) AS total_users FROM users")
+    # Fetch total members (users)
+    cursor.execute("SELECT COUNT(*) AS total_users FROM users WHERE role = 'user'")
     total_users = cursor.fetchone()['total_users']
 
-    cursor.execute("SELECT COUNT(*) AS available_venues FROM venues")
-    available_venues = cursor.fetchone()['available_venues']
-
-    cursor.execute("SELECT COUNT(*) AS total_vendors FROM users WHERE is_vendor = 1")
+    # Fetch all vendors
+    cursor.execute("SELECT COUNT(*) AS total_vendors FROM users WHERE role = 'vendor'")
     total_vendors = cursor.fetchone()['total_vendors']
 
-    cursor.execute("SELECT COUNT(*) AS total_services FROM services")
-    total_services = cursor.fetchone()['total_services']
+    # Fetch available venues (both vendor and admin added)
+    cursor.execute("""
+        SELECT COUNT(*) AS available_venues 
+        FROM vendor_venues 
+        WHERE status = 'available'
+        UNION ALL
+        SELECT COUNT(*) AS available_venues 
+        FROM admin_venues 
+        WHERE status = 'available'
+    """)
+    available_venues = sum([row['available_venues'] for row in cursor.fetchall()])
 
-    cursor.execute("SELECT COUNT(*) AS booked_venues FROM bookings")
-    booked_venues = cursor.fetchone()['booked_venues']
+    # Fetch booked venues (both vendor and admin added)
+    cursor.execute("""
+        SELECT COUNT(*) AS booked_venues 
+        FROM vendor_venues 
+        WHERE status = 'booked'
+        UNION ALL
+        SELECT COUNT(*) AS booked_venues 
+        FROM admin_venues 
+        WHERE status = 'booked'
+    """)
+    booked_venues = sum([row['booked_venues'] for row in cursor.fetchall()])
 
-    cursor.execute("SELECT * FROM locations")
-    locations = cursor.fetchall()
+    # Fetch total services (both vendor and admin added)
+    cursor.execute("""
+        SELECT COUNT(*) AS total_services 
+        FROM vendor_services
+        UNION ALL
+        SELECT COUNT(*) AS total_services 
+        FROM admin_services
+    """)
+    total_services = sum([row['total_services'] for row in cursor.fetchall()])
 
-    cursor.execute("SELECT * FROM venues")
-    venues = cursor.fetchall()
+    # Fetch all locations (vendor and admin added)
+    cursor.execute("""
+        SELECT id, address, city, state, country, 'vendor' AS source
+        FROM vendor_locations
+        UNION ALL
+        SELECT id, address, city, state, country, 'admin' AS source
+        FROM admin_locations
+    """)
+    all_locations = cursor.fetchall()
 
-    cursor.execute("SELECT * FROM services")
-    services = cursor.fetchall()
+    # Fetch all venues (vendor and admin added)
+    cursor.execute("""
+        SELECT id, location_id, name, description, capacity, price, status, 'vendor' AS source
+        FROM vendor_venues
+        UNION ALL
+        SELECT id, location_id, name, description, capacity, price, status, 'admin' AS source
+        FROM admin_venues
+    """)
+    all_venues = cursor.fetchall()
+
+    # Fetch all services (vendor and admin added)
+    cursor.execute("""
+        SELECT id, name, description, price, 'vendor' AS source
+        FROM vendor_services
+        UNION ALL
+        SELECT id, name, description, price, 'admin' AS source
+        FROM admin_services
+    """)
+    all_services = cursor.fetchall()
 
     cursor.close()
     connection.close()
@@ -359,14 +432,295 @@ def admin_dashboard():
     return render_template(
         'admin_dashboard.html',
         total_users=total_users,
-        available_venues=available_venues,
         total_vendors=total_vendors,
-        total_services=total_services,
+        available_venues=available_venues,
         booked_venues=booked_venues,
-        locations=locations,
-        venues=venues,
-        services=services
+        total_services=total_services,
+        all_locations=all_locations,
+        all_venues=all_venues,
+        all_services=all_services
     )
+
+@app.route('/vendor', methods=['GET', 'POST'])
+def vendor_dashboard():
+    if not session.get('user_signed_in') or session.get('user_role') != 'vendor':
+        return redirect(url_for('eventhub'))  # Redirect if unauthorized
+
+    vendor_id = session['user_id']  # Get the logged-in vendor's ID
+
+    connection = connection_pool.get_connection()
+    cursor = connection.cursor(dictionary=True)
+
+    # Fetch vendor-specific locations
+    cursor.execute("SELECT * FROM vendor_locations WHERE vendor_id = %s", (vendor_id,))
+    vendor_locations = cursor.fetchall()
+
+    # Fetch vendor-specific venues
+    cursor.execute("SELECT * FROM vendor_venues WHERE vendor_id = %s", (vendor_id,))
+    vendor_venues = cursor.fetchall()
+
+    # Fetch vendor-specific services
+    cursor.execute("SELECT * FROM vendor_services WHERE vendor_id = %s", (vendor_id,))
+    vendor_services = cursor.fetchall()
+
+    # Calculate metrics for the vendor
+    cursor.execute("SELECT COUNT(*) AS total_services FROM vendor_services WHERE vendor_id = %s", (vendor_id,))
+    total_services = cursor.fetchone()['total_services']
+
+    cursor.execute("SELECT COUNT(*) AS total_venues FROM vendor_venues WHERE vendor_id = %s", (vendor_id,))
+    total_venues = cursor.fetchone()['total_venues']
+
+    cursor.execute("SELECT COUNT(*) AS available_venues FROM vendor_venues WHERE vendor_id = %s AND status = 'available'", (vendor_id,))
+    available_venues = cursor.fetchone()['available_venues']
+
+    cursor.execute("SELECT COUNT(*) AS booked_venues FROM vendor_venues WHERE vendor_id = %s AND status = 'booked'", (vendor_id,))
+    booked_venues = cursor.fetchone()['booked_venues']
+
+    cursor.execute("SELECT COUNT(*) AS total_bookings FROM bookings WHERE vendor_id = %s", (vendor_id,))
+    total_bookings = cursor.fetchone()['total_bookings']
+
+    cursor.execute("SELECT COUNT(*) AS booked_services FROM bookings WHERE vendor_id = %s AND service_id IS NOT NULL", (vendor_id,))
+    booked_services = cursor.fetchone()['booked_services']
+
+    cursor.close()
+    connection.close()
+
+    return render_template(
+        'vendor_dashboard.html',
+        vendor_locations=vendor_locations,
+        vendor_venues=vendor_venues,
+        vendor_services=vendor_services,
+        total_services=total_services,
+        total_venues=total_venues,
+        available_venues=available_venues,
+        booked_venues=booked_venues,
+        total_bookings=total_bookings,
+        booked_services=booked_services
+    )
+
+@app.route('/add_location', methods=['POST'])
+def add_location():
+    if not session.get('user_signed_in') or session.get('user_role') not in ['admin', 'vendor']:
+        return redirect(url_for('eventhub'))  # Redirect if unauthorized
+
+    data = request.form
+    address = data['address']
+    city = data['city']
+    state = data.get('state', None)
+    country = data['country']
+    added_by_role = session.get('user_role')  # Get the role of the logged-in user
+
+    connection = connection_pool.get_connection()
+    cursor = connection.cursor()
+
+    if added_by_role == 'vendor':
+        vendor_id = session.get('user_id')  # Use the logged-in vendor's ID
+
+        # Verify that the vendor exists in the users table
+        cursor.execute("SELECT * FROM users WHERE id = %s AND role = 'vendor'", (vendor_id,))
+        user = cursor.fetchone()
+
+        if not user:
+            cursor.close()
+            connection.close()
+            return jsonify({"error": "Vendor does not exist or is not authorized"}), 400
+
+        # Insert into vendor_locations table
+        cursor.execute("""
+            INSERT INTO vendor_locations (address, city, state, country, vendor_id)
+            VALUES (%s, %s, %s, %s, %s)
+        """, (address, city, state, country, vendor_id))
+
+    elif added_by_role == 'admin':
+        # Insert into admin_locations table
+        cursor.execute("""
+            INSERT INTO admin_locations (address, city, state, country)
+            VALUES (%s, %s, %s, %s)
+        """, (address, city, state, country))
+
+    connection.commit()
+    cursor.close()
+    connection.close()
+
+    return redirect(url_for('admin_dashboard') if added_by_role == 'admin' else url_for('vendor_dashboard'))
+
+
+@app.route('/add_venue', methods=['POST'])
+def add_venue():
+    if not session.get('user_signed_in') or session.get('user_role') not in ['admin', 'vendor']:
+        return redirect(url_for('eventhub'))  # Redirect if unauthorized
+
+    data = request.form
+    venue_name = data['venue_name']
+    venue_description = data.get('venue_description', None)
+    venue_capacity = data['venue_capacity']
+    venue_price = data['venue_price']
+    location_id = data['location_id']
+    added_by_role = session.get('user_role')  # Get the role of the logged-in user
+
+    connection = connection_pool.get_connection()
+    cursor = connection.cursor(dictionary=True)
+
+    if added_by_role == 'vendor':
+        vendor_id = session.get('user_id')  # Use the logged-in vendor's ID
+
+        # Verify that the vendor exists in the users table
+        cursor.execute("SELECT * FROM users WHERE id = %s AND role = 'vendor'", (vendor_id,))
+        user = cursor.fetchone()
+
+        if not user:
+            cursor.close()
+            connection.close()
+            return jsonify({"error": "Vendor does not exist or is not authorized"}), 400
+
+        # Insert into vendor_venues table
+        cursor.execute("""
+            INSERT INTO vendor_venues (name, description, capacity, price, location_id, vendor_id)
+            VALUES (%s, %s, %s, %s, %s, %s)
+        """, (venue_name, venue_description, venue_capacity, venue_price, location_id, vendor_id))
+
+    elif added_by_role == 'admin':
+        # Insert into admin_venues table
+        cursor.execute("""
+            INSERT INTO admin_venues (name, description, capacity, price, location_id)
+            VALUES (%s, %s, %s, %s, %s)
+        """, (venue_name, venue_description, venue_capacity, venue_price, location_id))
+
+    connection.commit()
+    cursor.close()
+    connection.close()
+
+    return redirect(url_for('admin_dashboard') if added_by_role == 'admin' else url_for('vendor_dashboard'))
+
+
+@app.route('/add_service', methods=['POST'])
+def add_service():
+    if not session.get('user_signed_in') or session.get('user_role') not in ['admin', 'vendor']:
+        return redirect(url_for('eventhub'))  # Redirect if unauthorized
+
+    data = request.form
+    service_name = data['service_name']
+    service_description = data.get('service_description', None)
+    service_price = data['service_price']
+    added_by_role = session.get('user_role')  # Get the role of the logged-in user
+
+    connection = connection_pool.get_connection()
+    cursor = connection.cursor()
+
+    if added_by_role == 'vendor':
+        vendor_id = session.get('user_id')  # Use the logged-in vendor's ID
+
+        # Verify that the vendor exists in the users table
+        cursor.execute("SELECT * FROM users WHERE id = %s AND role = 'vendor'", (vendor_id,))
+        user = cursor.fetchone()
+
+        if not user:
+            cursor.close()
+            connection.close()
+            return jsonify({"error": "Vendor does not exist or is not authorized"}), 400
+
+        # Insert into vendor_services table
+        cursor.execute("""
+            INSERT INTO vendor_services (name, description, price, vendor_id)
+            VALUES (%s, %s, %s, %s)
+        """, (service_name, service_description, service_price, vendor_id))
+
+    elif added_by_role == 'admin':
+        # Insert into admin_services table
+        cursor.execute("""
+            INSERT INTO admin_services (name, description, price)
+            VALUES (%s, %s, %s)
+        """, (service_name, service_description, service_price))
+
+    connection.commit()
+    cursor.close()
+    connection.close()
+
+    return redirect(url_for('admin_dashboard') if added_by_role == 'admin' else url_for('vendor_dashboard'))
+
+
+@app.route('/add_event', methods=['POST'])
+def add_event():
+    if not session.get('user_signed_in') or session.get('user_role') not in ['admin', 'vendor']:
+        return redirect(url_for('eventhub'))  # Redirect if unauthorized
+
+    data = request.form
+    event_name = data['event_name']
+    event_description = data.get('event_description', None)
+    event_date = data['event_date']
+    event_venue_id = data['event_venue_id']
+    event_service_id = data['event_service_id']
+    added_by_role = session.get('user_role')  # Get the role of the logged-in user
+
+    connection = connection_pool.get_connection()
+    cursor = connection.cursor()
+
+    if added_by_role == 'vendor':
+        vendor_id = session.get('user_id')  # Use the logged-in vendor's ID
+
+        # Verify that the vendor exists in the users table
+        cursor.execute("SELECT * FROM users WHERE id = %s AND role = 'vendor'", (vendor_id,))
+        user = cursor.fetchone()
+
+        if not user:
+            cursor.close()
+            connection.close()
+            return jsonify({"error": "Vendor does not exist or is not authorized"}), 400
+
+        # Insert into vendor_events table
+        cursor.execute("""
+            INSERT INTO vendor_events (name, description, date, venue_id, service_id, vendor_id)
+            VALUES (%s, %s, %s, %s, %s, %s)
+        """, (event_name, event_description, event_date, event_venue_id, event_service_id, vendor_id))
+
+    elif added_by_role == 'admin':
+        # Insert into admin_events table
+        cursor.execute("""
+            INSERT INTO admin_events (name, description, date, venue_id, service_id)
+            VALUES (%s, %s, %s, %s, %s)
+        """, (event_name, event_description, event_date, event_venue_id, event_service_id))
+
+    connection.commit()
+    cursor.close()
+    connection.close()
+
+    return redirect(url_for('admin_dashboard') if added_by_role == 'admin' else url_for('vendor_dashboard'))
+
+
+@app.route('/metrics', methods=['GET'])
+def get_metrics():
+    if not session.get('user_signed_in') or session.get('user_role') not in ['admin', 'vendor']:
+        return redirect(url_for('eventhub'))  # Redirect if unauthorized
+
+    connection = connection_pool.get_connection()
+    cursor = connection.cursor(dictionary=True)
+
+    # Metrics for both admin and vendor
+    cursor.execute("SELECT COUNT(*) AS total_services FROM services")
+    total_services = cursor.fetchone()['total_services']
+
+    cursor.execute("SELECT COUNT(*) AS booked_services FROM bookings")
+    booked_services = cursor.fetchone()['booked_services']
+
+    cursor.execute("SELECT COUNT(*) AS total_bookings FROM bookings")
+    total_bookings = cursor.fetchone()['total_bookings']
+
+    cursor.execute("SELECT COUNT(*) AS available_venues FROM venues WHERE status = 'available'")
+    available_venues = cursor.fetchone()['available_venues']
+
+    cursor.execute("SELECT COUNT(*) AS booked_venues FROM venues WHERE status = 'booked'")
+    booked_venues = cursor.fetchone()['booked_venues']
+
+    cursor.close()
+    connection.close()
+
+    return jsonify({
+        "total_services": total_services,
+        "booked_services": booked_services,
+        "total_bookings": total_bookings,
+        "available_venues": available_venues,
+        "booked_venues": booked_venues
+    })
 
 if __name__ == '__main__':
     app.run(debug=True)
