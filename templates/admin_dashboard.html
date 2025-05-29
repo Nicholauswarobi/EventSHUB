@@ -79,7 +79,7 @@
 
       <!-- Venue Tab -->
       <div id="venueTab" class="tab-content">
-        <form method="POST" action="/add_venue" onsubmit="handleFormSubmit(event, 'venueTab', 'serviceTab', 'addDetailsModal')">
+        <form method="POST" action="/add_venue" enctype="multipart/form-data" onsubmit="handleFormSubmit(event, 'venueTab', 'serviceTab', 'addDetailsModal')">
           <h3>Add Venue</h3>
           <input type="text" name="venue_name" placeholder="Venue Name" required>
           <textarea name="venue_description" placeholder="Description"></textarea>
@@ -91,6 +91,7 @@
               <option value="{{ location.id }}">{{ location.address }}, {{ location.city }}</option>
             {% endfor %}
           </select>
+          <input type="file" name="venue_image" accept="image/*" required>
           <button type="submit" name="submit_venue">Submit Venue</button>
         </form>
       </div>
@@ -108,7 +109,7 @@
 
       <!-- Event Tab -->
       <div id="eventTab" class="tab-content">
-        <form method="POST" action="/add_event" onsubmit="handleFormSubmit(event, 'eventTab', null, 'addDetailsModal')">
+        <form method="POST" action="/add_event" enctype="multipart/form-data" onsubmit="handleFormSubmit(event, 'eventTab', null, 'addDetailsModal')">
           <h3>Add Event</h3>
           <input type="text" name="event_name" placeholder="Event Name" required>
           <textarea name="event_description" placeholder="Description"></textarea>
@@ -125,6 +126,7 @@
               <option value="{{ service.id }}">{{ service.name }}</option>
             {% endfor %}
           </select>
+          <input type="file" name="event_image" accept="image/*" required>
           <button type="submit" name="submit_event">Submit Event</button>
         </form>
       </div>

@@ -11,10 +11,16 @@
   <div class="container">
     <!-- Login Form -->
     <div id="loginForm" class="form-group {% if form == 'login' %}active{% endif %}">
-      <h2>Welcome to EventHub</h2>
+      <h2>Welcome Back</h2>
       <form onsubmit="event.preventDefault(); login();">
-        <input type="text" id="loginUsername" placeholder="Username" required>
-        <input type="password" id="loginPassword" placeholder="Password" required>
+        <div class="input-group">
+          <input type="text" id="loginUsername" placeholder="Username" required>
+          <span class="icon">👤</span>
+        </div>
+        <div class="input-group">
+          <input type="password" id="loginPassword" placeholder="Password" required>
+          <span class="icon">🔒</span>
+        </div>
         <button type="submit">Login</button>
       </form>
       <div class="toggle">
@@ -24,16 +30,27 @@
 
     <!-- Registration Form -->
     <div id="registerForm" class="form-group {% if form == 'register' %}active{% endif %}">
-      <h2>Register</h2>
+      <h2>Create Account</h2>
       <form onsubmit="event.preventDefault(); register();">
-        <input type="text" id="regUsername" placeholder="Username" required>
-        <input type="email" id="regEmail" placeholder="Email" required>
-        <input type="password" id="regPassword" placeholder="Password" required>
-        <select id="userRole" required>
-          <option value="">Select Role</option>
-          <option value="user">User</option>
-          <option value="vendor">Vendor</option>
-        </select>
+        <div class="input-group">
+          <input type="text" id="regUsername" placeholder="Username" required>
+          <span class="icon">👤</span>
+        </div>
+        <div class="input-group">
+          <input type="email" id="regEmail" placeholder="Email" required>
+          <span class="icon">📧</span>
+        </div>
+        <div class="input-group">
+          <input type="password" id="regPassword" placeholder="Password" required>
+          <span class="icon">🔒</span>
+        </div>
+        <div class="custom-select">
+          <select id="userRole" required>
+            <option value="" disabled selected>Select Role</option>
+            <option value="user">User</option>
+            <option value="vendor">Vendor</option>
+          </select>
+        </div>
         <button type="submit">Register</button>
       </form>
       <div class="toggle">

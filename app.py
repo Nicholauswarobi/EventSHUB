@@ -77,6 +77,7 @@ def create_tables():
             price DECIMAL(10, 2) NOT NULL,
             vendor_id INT NOT NULL,
             status ENUM('available', 'booked') DEFAULT 'available',  -- Track venue availability
+            image_path VARCHAR(255),  -- Path to the venue image
             FOREIGN KEY (location_id) REFERENCES vendor_locations(id),
             FOREIGN KEY (vendor_id) REFERENCES users(id)
         )
@@ -110,6 +111,7 @@ def create_tables():
             venue_id INT NOT NULL,
             service_id INT NOT NULL,
             vendor_id INT NOT NULL,  -- Track which vendor added the event
+            image_path VARCHAR(255),
             FOREIGN KEY (venue_id) REFERENCES vendor_venues(id),
             FOREIGN KEY (service_id) REFERENCES vendor_services(id),
             FOREIGN KEY (vendor_id) REFERENCES users(id)
@@ -140,7 +142,8 @@ def create_tables():
             description TEXT,
             capacity INT NOT NULL,
             price DECIMAL(10, 2) NOT NULL,
-            status ENUM('available', 'booked') DEFAULT 'available',        
+            status ENUM('available', 'booked') DEFAULT 'available', 
+            image_path VARCHAR(255),       
             FOREIGN KEY (location_id) REFERENCES admin_locations(id)
         )
         """)
@@ -168,6 +171,7 @@ def create_tables():
             date DATE NOT NULL,
             venue_id INT NOT NULL,
             service_id INT NOT NULL,
+            image_path VARCHAR(255),
             FOREIGN KEY (venue_id) REFERENCES admin_venues(id),
             FOREIGN KEY (service_id) REFERENCES admin_services(id)
         )
@@ -563,14 +567,25 @@ def add_venue():
         venue_price = data['venue_price']
         location_id = data['location_id']
         added_by_role = session.get('user_role')  # Get the role of the logged-in user
+        venue_image = request.files['venue_image']  # Get the uploaded image
+
+        # Determine the folder based on the role
+        if added_by_role == 'vendor':
+            vendor_id = session.get('user_id')  # Use the logged-in vendor's ID
+            image_folder = 'static/venue_images'
+            image_path = f"{image_folder}/{venue_image.filename}"
+        elif added_by_role == 'admin':
+            image_folder = 'static/admin_venue_images'
+            image_path = f"{image_folder}/{venue_image.filename}"
+
+        # Save the image to the appropriate folder
+        venue_image.save(image_path)
 
         connection = connection_pool.get_connection()
         cursor = connection.cursor()
 
         # Check for duplicate venue names
         if added_by_role == 'vendor':
-            vendor_id = session.get('user_id')  # Use the logged-in vendor's ID
-
             cursor.execute("SELECT * FROM vendor_venues WHERE name = %s AND vendor_id = %s", (venue_name, vendor_id))
             existing_venue = cursor.fetchone()
         elif added_by_role == 'admin':
@@ -585,23 +600,23 @@ def add_venue():
         # Insert new venue
         if added_by_role == 'vendor':
             cursor.execute("""
-                INSERT INTO vendor_venues (name, description, capacity, price, location_id, vendor_id)
-                VALUES (%s, %s, %s, %s, %s, %s)
-            """, (venue_name, venue_description, venue_capacity, venue_price, location_id, vendor_id))
+                INSERT INTO vendor_venues (name, description, capacity, price, location_id, vendor_id, image_path)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """, (venue_name, venue_description, venue_capacity, venue_price, location_id, vendor_id, image_path))
         elif added_by_role == 'admin':
             cursor.execute("""
-                INSERT INTO admin_venues (name, description, capacity, price, location_id)
-                VALUES (%s, %s, %s, %s, %s)
-            """, (venue_name, venue_description, venue_capacity, venue_price, location_id))
+                INSERT INTO admin_venues (name, description, capacity, price, location_id, image_path)
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """, (venue_name, venue_description, venue_capacity, venue_price, location_id, image_path))
 
         connection.commit()
         cursor.close()
         connection.close()
 
         return jsonify({"success": True})  # Return success response
-    except mysql.connector.Error as err:
-        print(f"Database error: {err}")
-        return jsonify({"success": False, "error": str(err)}), 500
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
 
 
 @app.route('/add_service', methods=['POST'])
@@ -665,8 +680,21 @@ def add_event():
         event_description = data.get('event_description', None)
         event_date = data['event_date']
         event_venue_id = data['event_venue_id']
-        event_service_id = data['event_service_id']
+        event_service_id = data.get('event_service_id', None)
         added_by_role = session.get('user_role')  # Get the role of the logged-in user
+        event_image = request.files['event_image']  # Get the uploaded image
+
+        # Determine the folder based on the role
+        if added_by_role == 'vendor':
+            vendor_id = session.get('user_id')  # Use the logged-in vendor's ID
+            image_folder = 'static/event_images'
+            image_path = f"{image_folder}/{event_image.filename}"
+        elif added_by_role == 'admin':
+            image_folder = 'static/admin_event_images'
+            image_path = f"{image_folder}/{event_image.filename}"
+
+        # Save the image to the appropriate folder
+        event_image.save(image_path)
 
         connection = connection_pool.get_connection()
         cursor = connection.cursor()
@@ -685,25 +713,25 @@ def add_event():
 
             # Insert into vendor_events table
             cursor.execute("""
-                INSERT INTO vendor_events (name, description, date, venue_id, service_id, vendor_id)
-                VALUES (%s, %s, %s, %s, %s, %s)
-            """, (event_name, event_description, event_date, event_venue_id, event_service_id, vendor_id))
+                INSERT INTO vendor_events (name, description, date, venue_id, service_id, vendor_id, image_path)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """, (event_name, event_description, event_date, event_venue_id, event_service_id, vendor_id, image_path))
 
         elif added_by_role == 'admin':
             # Insert into admin_events table
             cursor.execute("""
-                INSERT INTO admin_events (name, description, date, venue_id, service_id)
-                VALUES (%s, %s, %s, %s, %s)
-            """, (event_name, event_description, event_date, event_venue_id, event_service_id))
+                INSERT INTO admin_events (name, description, date, venue_id, service_id, image_path)
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """, (event_name, event_description, event_date, event_venue_id, event_service_id, image_path))
 
         connection.commit()
         cursor.close()
         connection.close()
 
         return jsonify({"success": True})  # Return success response
-    except mysql.connector.Error as err:
-        print(f"Database error: {err}")
-        return jsonify({"success": False, "error": str(err)}), 500
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
 
 
 @app.route('/metrics', methods=['GET'])
