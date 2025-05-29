@@ -16,7 +16,7 @@ async function login() {
   const password = document.getElementById('loginPassword').value;
 
   if (!username || !password) {
-    alert('Please fill in both fields');
+    showNotification('Please fill in both fields', true);
     return;
   }
 
@@ -28,16 +28,19 @@ async function login() {
     });
 
     if (response.redirected) {
-      // Redirect to the URL provided by the backend
-      window.location.href = response.url;
+      showNotification('Login successful!');
+      setTimeout(() => {
+        window.location.href = response.url; // Redirect after the notification disappears
+      }, 3000); // Wait for 3 seconds before redirecting
     } else {
       const data = await response.json();
       if (data.error) {
-        alert(data.error); // Display error message
+        showNotification(data.error, true); // Display error message
       }
     }
   } catch (error) {
     console.error('Error:', error);
+    showNotification('An error occurred during login', true);
   }
 }
 
@@ -49,7 +52,7 @@ async function register() {
   const role = document.getElementById('userRole').value; // Ensure the correct ID is used
 
   if (!username || !email || !password || !role) {
-    alert('Please fill in all fields');
+    showNotification('Please fill in all fields', true);
     return;
   }
 
@@ -62,13 +65,16 @@ async function register() {
 
     const data = await response.json();
     if (response.ok) {
-      alert(data.message);
-      window.location.href = '/index?form=login'; // Redirect to login page after registration
+      showNotification('Registration successful! Redirecting to login...');
+      setTimeout(() => {
+        window.location.href = '/index?form=login'; // Redirect to login page after registration
+      }, 3000); // Wait for the notification to disappear before redirecting
     } else {
-      alert(data.error);
+      showNotification(data.error, true); // Display error message
     }
   } catch (error) {
     console.error('Error:', error);
+    showNotification('An error occurred during registration', true);
   }
 }
 
@@ -80,4 +86,19 @@ function redirectToLogin() {
 // Redirect to registration page
 function redirectToRegister() {
   toggleForm('register');
+}
+
+function showNotification(message, isError = false) {
+  const notification = document.getElementById('notification');
+  notification.textContent = message;
+  notification.className = 'notification'; // Reset classes
+  if (isError) {
+    notification.classList.add('error'); // Add error class if needed
+  }
+  notification.style.display = 'block'; // Show notification
+
+  // Hide notification after 3 seconds
+  setTimeout(() => {
+    notification.style.display = 'none';
+  }, 3000);
 }
