@@ -501,190 +501,206 @@ def vendor_dashboard():
 @app.route('/add_location', methods=['POST'])
 def add_location():
     if not session.get('user_signed_in') or session.get('user_role') not in ['admin', 'vendor']:
-        return redirect(url_for('eventhub'))  # Redirect if unauthorized
+        return jsonify({"success": False, "error": "Unauthorized access"}), 403
 
-    data = request.form
-    address = data['address']
-    city = data['city']
-    state = data.get('state', None)
-    country = data['country']
-    added_by_role = session.get('user_role')  # Get the role of the logged-in user
+    try:
+        data = request.form
+        address = data['address']
+        city = data['city']
+        state = data.get('state', None)
+        country = data['country']
+        added_by_role = session.get('user_role')  # Get the role of the logged-in user
 
-    connection = connection_pool.get_connection()
-    cursor = connection.cursor()
+        connection = connection_pool.get_connection()
+        cursor = connection.cursor()
 
-    if added_by_role == 'vendor':
-        vendor_id = session.get('user_id')  # Use the logged-in vendor's ID
+        if added_by_role == 'vendor':
+            vendor_id = session.get('user_id')  # Use the logged-in vendor's ID
 
-        # Verify that the vendor exists in the users table
-        cursor.execute("SELECT * FROM users WHERE id = %s AND role = 'vendor'", (vendor_id,))
-        user = cursor.fetchone()
+            # Verify that the vendor exists in the users table
+            cursor.execute("SELECT * FROM users WHERE id = %s AND role = 'vendor'", (vendor_id,))
+            user = cursor.fetchone()
 
-        if not user:
-            cursor.close()
-            connection.close()
-            return jsonify({"error": "Vendor does not exist or is not authorized"}), 400
+            if not user:
+                cursor.close()
+                connection.close()
+                return jsonify({"success": False, "error": "Vendor does not exist or is not authorized"}), 400
 
-        # Insert into vendor_locations table
-        cursor.execute("""
-            INSERT INTO vendor_locations (address, city, state, country, vendor_id)
-            VALUES (%s, %s, %s, %s, %s)
-        """, (address, city, state, country, vendor_id))
+            # Insert into vendor_locations table
+            cursor.execute("""
+                INSERT INTO vendor_locations (address, city, state, country, vendor_id)
+                VALUES (%s, %s, %s, %s, %s)
+            """, (address, city, state, country, vendor_id))
 
-    elif added_by_role == 'admin':
-        # Insert into admin_locations table
-        cursor.execute("""
-            INSERT INTO admin_locations (address, city, state, country)
-            VALUES (%s, %s, %s, %s)
-        """, (address, city, state, country))
+        elif added_by_role == 'admin':
+            # Insert into admin_locations table
+            cursor.execute("""
+                INSERT INTO admin_locations (address, city, state, country)
+                VALUES (%s, %s, %s, %s)
+            """, (address, city, state, country))
 
-    connection.commit()
-    cursor.close()
-    connection.close()
+        connection.commit()
+        cursor.close()
+        connection.close()
 
-    return redirect(url_for('admin_dashboard') if added_by_role == 'admin' else url_for('vendor_dashboard'))
+        return jsonify({"success": True})  # Return success response
+    except mysql.connector.Error as err:
+        print(f"Database error: {err}")
+        return jsonify({"success": False, "error": str(err)}), 500
 
 
 @app.route('/add_venue', methods=['POST'])
 def add_venue():
     if not session.get('user_signed_in') or session.get('user_role') not in ['admin', 'vendor']:
-        return redirect(url_for('eventhub'))  # Redirect if unauthorized
+        return jsonify({"success": False, "error": "Unauthorized access"}), 403
 
-    data = request.form
-    venue_name = data['venue_name']
-    venue_description = data.get('venue_description', None)
-    venue_capacity = data['venue_capacity']
-    venue_price = data['venue_price']
-    location_id = data['location_id']
-    added_by_role = session.get('user_role')  # Get the role of the logged-in user
+    try:
+        data = request.form
+        venue_name = data['venue_name']
+        venue_description = data.get('venue_description', None)
+        venue_capacity = data['venue_capacity']
+        venue_price = data['venue_price']
+        location_id = data['location_id']
+        added_by_role = session.get('user_role')  # Get the role of the logged-in user
 
-    connection = connection_pool.get_connection()
-    cursor = connection.cursor(dictionary=True)
+        connection = connection_pool.get_connection()
+        cursor = connection.cursor()
 
-    if added_by_role == 'vendor':
-        vendor_id = session.get('user_id')  # Use the logged-in vendor's ID
+        if added_by_role == 'vendor':
+            vendor_id = session.get('user_id')  # Use the logged-in vendor's ID
 
-        # Verify that the vendor exists in the users table
-        cursor.execute("SELECT * FROM users WHERE id = %s AND role = 'vendor'", (vendor_id,))
-        user = cursor.fetchone()
+            # Verify that the vendor exists in the users table
+            cursor.execute("SELECT * FROM users WHERE id = %s AND role = 'vendor'", (vendor_id,))
+            user = cursor.fetchone()
 
-        if not user:
-            cursor.close()
-            connection.close()
-            return jsonify({"error": "Vendor does not exist or is not authorized"}), 400
+            if not user:
+                cursor.close()
+                connection.close()
+                return jsonify({"success": False, "error": "Vendor does not exist or is not authorized"}), 400
 
-        # Insert into vendor_venues table
-        cursor.execute("""
-            INSERT INTO vendor_venues (name, description, capacity, price, location_id, vendor_id)
-            VALUES (%s, %s, %s, %s, %s, %s)
-        """, (venue_name, venue_description, venue_capacity, venue_price, location_id, vendor_id))
+            # Insert into vendor_venues table
+            cursor.execute("""
+                INSERT INTO vendor_venues (name, description, capacity, price, location_id, vendor_id)
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """, (venue_name, venue_description, venue_capacity, venue_price, location_id, vendor_id))
 
-    elif added_by_role == 'admin':
-        # Insert into admin_venues table
-        cursor.execute("""
-            INSERT INTO admin_venues (name, description, capacity, price, location_id)
-            VALUES (%s, %s, %s, %s, %s)
-        """, (venue_name, venue_description, venue_capacity, venue_price, location_id))
+        elif added_by_role == 'admin':
+            # Insert into admin_venues table
+            cursor.execute("""
+                INSERT INTO admin_venues (name, description, capacity, price, location_id)
+                VALUES (%s, %s, %s, %s, %s)
+            """, (venue_name, venue_description, venue_capacity, venue_price, location_id))
 
-    connection.commit()
-    cursor.close()
-    connection.close()
+        connection.commit()
+        cursor.close()
+        connection.close()
 
-    return redirect(url_for('admin_dashboard') if added_by_role == 'admin' else url_for('vendor_dashboard'))
+        return jsonify({"success": True})  # Return success response
+    except mysql.connector.Error as err:
+        print(f"Database error: {err}")
+        return jsonify({"success": False, "error": str(err)}), 500
 
 
 @app.route('/add_service', methods=['POST'])
 def add_service():
     if not session.get('user_signed_in') or session.get('user_role') not in ['admin', 'vendor']:
-        return redirect(url_for('eventhub'))  # Redirect if unauthorized
+        return jsonify({"success": False, "error": "Unauthorized access"}), 403
 
-    data = request.form
-    service_name = data['service_name']
-    service_description = data.get('service_description', None)
-    service_price = data['service_price']
-    added_by_role = session.get('user_role')  # Get the role of the logged-in user
+    try:
+        data = request.form
+        service_name = data['service_name']
+        service_description = data.get('service_description', None)
+        service_price = data['service_price']
+        added_by_role = session.get('user_role')  # Get the role of the logged-in user
 
-    connection = connection_pool.get_connection()
-    cursor = connection.cursor()
+        connection = connection_pool.get_connection()
+        cursor = connection.cursor()
 
-    if added_by_role == 'vendor':
-        vendor_id = session.get('user_id')  # Use the logged-in vendor's ID
+        if added_by_role == 'vendor':
+            vendor_id = session.get('user_id')  # Use the logged-in vendor's ID
 
-        # Verify that the vendor exists in the users table
-        cursor.execute("SELECT * FROM users WHERE id = %s AND role = 'vendor'", (vendor_id,))
-        user = cursor.fetchone()
+            # Verify that the vendor exists in the users table
+            cursor.execute("SELECT * FROM users WHERE id = %s AND role = 'vendor'", (vendor_id,))
+            user = cursor.fetchone()
 
-        if not user:
-            cursor.close()
-            connection.close()
-            return jsonify({"error": "Vendor does not exist or is not authorized"}), 400
+            if not user:
+                cursor.close()
+                connection.close()
+                return jsonify({"success": False, "error": "Vendor does not exist or is not authorized"}), 400
 
-        # Insert into vendor_services table
-        cursor.execute("""
-            INSERT INTO vendor_services (name, description, price, vendor_id)
-            VALUES (%s, %s, %s, %s)
-        """, (service_name, service_description, service_price, vendor_id))
+            # Insert into vendor_services table
+            cursor.execute("""
+                INSERT INTO vendor_services (name, description, price, vendor_id)
+                VALUES (%s, %s, %s, %s)
+            """, (service_name, service_description, service_price, vendor_id))
 
-    elif added_by_role == 'admin':
-        # Insert into admin_services table
-        cursor.execute("""
-            INSERT INTO admin_services (name, description, price)
-            VALUES (%s, %s, %s)
-        """, (service_name, service_description, service_price))
+        elif added_by_role == 'admin':
+            # Insert into admin_services table
+            cursor.execute("""
+                INSERT INTO admin_services (name, description, price)
+                VALUES (%s, %s, %s)
+            """, (service_name, service_description, service_price))
 
-    connection.commit()
-    cursor.close()
-    connection.close()
+        connection.commit()
+        cursor.close()
+        connection.close()
 
-    return redirect(url_for('admin_dashboard') if added_by_role == 'admin' else url_for('vendor_dashboard'))
+        return jsonify({"success": True})  # Return success response
+    except mysql.connector.Error as err:
+        print(f"Database error: {err}")
+        return jsonify({"success": False, "error": str(err)}), 500
 
 
 @app.route('/add_event', methods=['POST'])
 def add_event():
     if not session.get('user_signed_in') or session.get('user_role') not in ['admin', 'vendor']:
-        return redirect(url_for('eventhub'))  # Redirect if unauthorized
+        return jsonify({"success": False, "error": "Unauthorized access"}), 403
 
-    data = request.form
-    event_name = data['event_name']
-    event_description = data.get('event_description', None)
-    event_date = data['event_date']
-    event_venue_id = data['event_venue_id']
-    event_service_id = data['event_service_id']
-    added_by_role = session.get('user_role')  # Get the role of the logged-in user
+    try:
+        data = request.form
+        event_name = data['event_name']
+        event_description = data.get('event_description', None)
+        event_date = data['event_date']
+        event_venue_id = data['event_venue_id']
+        event_service_id = data['event_service_id']
+        added_by_role = session.get('user_role')  # Get the role of the logged-in user
 
-    connection = connection_pool.get_connection()
-    cursor = connection.cursor()
+        connection = connection_pool.get_connection()
+        cursor = connection.cursor()
 
-    if added_by_role == 'vendor':
-        vendor_id = session.get('user_id')  # Use the logged-in vendor's ID
+        if added_by_role == 'vendor':
+            vendor_id = session.get('user_id')  # Use the logged-in vendor's ID
 
-        # Verify that the vendor exists in the users table
-        cursor.execute("SELECT * FROM users WHERE id = %s AND role = 'vendor'", (vendor_id,))
-        user = cursor.fetchone()
+            # Verify that the vendor exists in the users table
+            cursor.execute("SELECT * FROM users WHERE id = %s AND role = 'vendor'", (vendor_id,))
+            user = cursor.fetchone()
 
-        if not user:
-            cursor.close()
-            connection.close()
-            return jsonify({"error": "Vendor does not exist or is not authorized"}), 400
+            if not user:
+                cursor.close()
+                connection.close()
+                return jsonify({"success": False, "error": "Vendor does not exist or is not authorized"}), 400
 
-        # Insert into vendor_events table
-        cursor.execute("""
-            INSERT INTO vendor_events (name, description, date, venue_id, service_id, vendor_id)
-            VALUES (%s, %s, %s, %s, %s, %s)
-        """, (event_name, event_description, event_date, event_venue_id, event_service_id, vendor_id))
+            # Insert into vendor_events table
+            cursor.execute("""
+                INSERT INTO vendor_events (name, description, date, venue_id, service_id, vendor_id)
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """, (event_name, event_description, event_date, event_venue_id, event_service_id, vendor_id))
 
-    elif added_by_role == 'admin':
-        # Insert into admin_events table
-        cursor.execute("""
-            INSERT INTO admin_events (name, description, date, venue_id, service_id)
-            VALUES (%s, %s, %s, %s, %s)
-        """, (event_name, event_description, event_date, event_venue_id, event_service_id))
+        elif added_by_role == 'admin':
+            # Insert into admin_events table
+            cursor.execute("""
+                INSERT INTO admin_events (name, description, date, venue_id, service_id)
+                VALUES (%s, %s, %s, %s, %s)
+            """, (event_name, event_description, event_date, event_venue_id, event_service_id))
 
-    connection.commit()
-    cursor.close()
-    connection.close()
+        connection.commit()
+        cursor.close()
+        connection.close()
 
-    return redirect(url_for('admin_dashboard') if added_by_role == 'admin' else url_for('vendor_dashboard'))
+        return jsonify({"success": True})  # Return success response
+    except mysql.connector.Error as err:
+        print(f"Database error: {err}")
+        return jsonify({"success": False, "error": str(err)}), 500
 
 
 @app.route('/metrics', methods=['GET'])
@@ -722,5 +738,68 @@ def get_metrics():
         "booked_venues": booked_venues
     })
 
+@app.route('/get_locations', methods=['GET'])
+def get_locations():
+    try:
+        connection = connection_pool.get_connection()
+        cursor = connection.cursor(dictionary=True)
+
+        user_role = session.get('user_role')
+        user_id = session.get('user_id')
+
+        if user_role == 'vendor':
+            # Fetch locations added by the vendor
+            cursor.execute("SELECT id, address, city FROM vendor_locations WHERE vendor_id = %s", (user_id,))
+        elif user_role == 'admin':
+            # Fetch all locations added by admin
+            cursor.execute("SELECT id, address, city FROM admin_locations")
+        else:
+            return jsonify({'error': 'Unauthorized access'}), 403
+
+        locations = cursor.fetchall()
+
+        cursor.close()
+        connection.close()
+
+        return jsonify({'locations': locations})
+    except mysql.connector.Error as err:
+        print(f"Error: {err}")
+        return jsonify({'error': 'Failed to fetch locations'}), 500
+
+
+@app.route('/get_venues_and_services', methods=['GET'])
+def get_venues_and_services():
+    try:
+        connection = connection_pool.get_connection()
+        cursor = connection.cursor(dictionary=True)
+
+        user_role = session.get('user_role')
+        user_id = session.get('user_id')
+
+        if user_role == 'vendor':
+            # Fetch venues and services added by the vendor
+            cursor.execute("SELECT id, name FROM vendor_venues WHERE vendor_id = %s", (user_id,))
+            venues = cursor.fetchall()
+
+            cursor.execute("SELECT id, name FROM vendor_services WHERE vendor_id = %s", (user_id,))
+            services = cursor.fetchall()
+        elif user_role == 'admin':
+            # Fetch all venues and services added by admin
+            cursor.execute("SELECT id, name FROM admin_venues")
+            venues = cursor.fetchall()
+
+            cursor.execute("SELECT id, name FROM admin_services")
+            services = cursor.fetchall()
+        else:
+            return jsonify({'error': 'Unauthorized access'}), 403
+
+        cursor.close()
+        connection.close()
+
+        return jsonify({'venues': venues, 'services': services})
+    except mysql.connector.Error as err:
+        print(f"Error: {err}")
+        return jsonify({'error': 'Failed to fetch venues and services'}), 500
+    
 if __name__ == '__main__':
     app.run(debug=True)

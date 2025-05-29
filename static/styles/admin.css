@@ -224,3 +224,24 @@ form button:hover {
   padding: 20px;
   margin-top: auto;
 }
+
+/* Notification Styles */
+.notification {
+  position: fixed;
+  top: 20px; /* Adjust the distance from the top */
+  left: 50%; /* Center horizontally */
+  transform: translateX(-50%); /* Adjust for centering */
+  background-color: #4caf50; /* Green background for success */
+  color: white;
+  padding: 15px;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  display: none; /* Hidden by default */
+  z-index: 1000;
+  text-align: center;
+  font-size: 18px;
+}
+
+.notification.error {
+  background-color: #f44336; /* Red background for errors */
+}
