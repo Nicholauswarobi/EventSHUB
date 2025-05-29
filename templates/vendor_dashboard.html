@@ -65,9 +65,10 @@
         <form method="POST" action="/add_location" onsubmit="handleFormSubmit(event, 'locationTab', 'venueTab', 'manageServicesModal')">
           <h3>Add Location</h3>
           <input type="text" name="address" placeholder="Address" required>
-          <input type="text" name="city" placeholder="City" required>
-          <input type="text" name="state" placeholder="State">
           <input type="text" name="country" placeholder="Country" required>
+          <input type="text" name="region" placeholder="Region">
+          <input type="text" name="district" placeholder="District">
+          <input type="text" name="street_ward" placeholder="Street/Ward">
           <button type="submit" name="submit_location">Submit Location</button>
         </form>
       </div>

@@ -57,9 +57,10 @@ def create_tables():
         CREATE TABLE IF NOT EXISTS vendor_locations (
             id INT AUTO_INCREMENT PRIMARY KEY,
             address VARCHAR(255) NOT NULL,
-            city VARCHAR(100) NOT NULL,
-            state VARCHAR(100),
             country VARCHAR(100) NOT NULL,
+            region VARCHAR(100),
+            district VARCHAR(100),
+            street_ward VARCHAR(100),
             vendor_id INT NOT NULL,  -- Track which vendor added the location
             FOREIGN KEY (vendor_id) REFERENCES users(id)
         )
@@ -123,9 +124,10 @@ def create_tables():
         CREATE TABLE IF NOT EXISTS admin_locations (
             id INT AUTO_INCREMENT PRIMARY KEY,
             address VARCHAR(255) NOT NULL,
-            city VARCHAR(100) NOT NULL,
-            state VARCHAR(100),
-            country VARCHAR(100) NOT NULL
+            country VARCHAR(100) NOT NULL,
+            region VARCHAR(100),
+            district VARCHAR(100),
+            street_ward VARCHAR(100)
         )
         """)
 
@@ -312,8 +314,6 @@ def user_dashboard():
         return redirect(url_for('eventhub'))  # Redirect to login if not signed in
     return render_template('Userdashboard.html', user_signed_in=user_signed_in)
 
-    print("User access granted. Rendering user dashboard.")  # Debug log
-    return render_template('Userdashboard.html', user_signed_in=user_signed_in)
 
 @app.route('/venues')
 def venues():
@@ -398,10 +398,10 @@ def admin_dashboard():
 
     # Fetch all locations (vendor and admin added)
     cursor.execute("""
-        SELECT id, address, city, state, country, 'vendor' AS source
+        SELECT id, address, country, region, district, street_ward, 'vendor' AS source
         FROM vendor_locations
         UNION ALL
-        SELECT id, address, city, state, country, 'admin' AS source
+        SELECT id, address, country, region, district, street_ward, 'admin' AS source
         FROM admin_locations
     """)
     all_locations = cursor.fetchall()
@@ -506,9 +506,10 @@ def add_location():
     try:
         data = request.form
         address = data['address']
-        city = data['city']
-        state = data.get('state', None)
         country = data['country']
+        region = data.get('region', None)
+        district = data.get('district', None)
+        street_ward = data.get('street_ward', None)
         added_by_role = session.get('user_role')  # Get the role of the logged-in user
 
         connection = connection_pool.get_connection()
@@ -528,16 +529,16 @@ def add_location():
 
             # Insert into vendor_locations table
             cursor.execute("""
-                INSERT INTO vendor_locations (address, city, state, country, vendor_id)
-                VALUES (%s, %s, %s, %s, %s)
-            """, (address, city, state, country, vendor_id))
+                INSERT INTO vendor_locations (address, country, region, district, street_ward, vendor_id)
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """, (address, country, region, district, street_ward, vendor_id))
 
         elif added_by_role == 'admin':
             # Insert into admin_locations table
             cursor.execute("""
-                INSERT INTO admin_locations (address, city, state, country)
-                VALUES (%s, %s, %s, %s)
-            """, (address, city, state, country))
+                INSERT INTO admin_locations (address, country, region, district, street_ward)
+                VALUES (%s, %s, %s, %s, %s)
+            """, (address, country, region, district, street_ward))
 
         connection.commit()
         cursor.close()
@@ -566,26 +567,28 @@ def add_venue():
         connection = connection_pool.get_connection()
         cursor = connection.cursor()
 
+        # Check for duplicate venue names
         if added_by_role == 'vendor':
             vendor_id = session.get('user_id')  # Use the logged-in vendor's ID
 
-            # Verify that the vendor exists in the users table
-            cursor.execute("SELECT * FROM users WHERE id = %s AND role = 'vendor'", (vendor_id,))
-            user = cursor.fetchone()
+            cursor.execute("SELECT * FROM vendor_venues WHERE name = %s AND vendor_id = %s", (venue_name, vendor_id))
+            existing_venue = cursor.fetchone()
+        elif added_by_role == 'admin':
+            cursor.execute("SELECT * FROM admin_venues WHERE name = %s", (venue_name,))
+            existing_venue = cursor.fetchone()
 
-            if not user:
-                cursor.close()
-                connection.close()
-                return jsonify({"success": False, "error": "Vendor does not exist or is not authorized"}), 400
+        if existing_venue:
+            cursor.close()
+            connection.close()
+            return jsonify({"success": False, "error": "Venue name already exists"}), 400
 
-            # Insert into vendor_venues table
+        # Insert new venue
+        if added_by_role == 'vendor':
             cursor.execute("""
                 INSERT INTO vendor_venues (name, description, capacity, price, location_id, vendor_id)
                 VALUES (%s, %s, %s, %s, %s, %s)
             """, (venue_name, venue_description, venue_capacity, venue_price, location_id, vendor_id))
-
         elif added_by_role == 'admin':
-            # Insert into admin_venues table
             cursor.execute("""
                 INSERT INTO admin_venues (name, description, capacity, price, location_id)
                 VALUES (%s, %s, %s, %s, %s)
@@ -749,10 +752,17 @@ def get_locations():
 
         if user_role == 'vendor':
             # Fetch locations added by the vendor
-            cursor.execute("SELECT id, address, city FROM vendor_locations WHERE vendor_id = %s", (user_id,))
+            cursor.execute("""
+                SELECT id, address, country, region, district, street_ward 
+                FROM vendor_locations 
+                WHERE vendor_id = %s
+            """, (user_id,))
         elif user_role == 'admin':
             # Fetch all locations added by admin
-            cursor.execute("SELECT id, address, city FROM admin_locations")
+            cursor.execute("""
+                SELECT id, address, country, region, district, street_ward 
+                FROM admin_locations
+            """)
         else:
             return jsonify({'error': 'Unauthorized access'}), 403
 

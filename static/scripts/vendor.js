@@ -101,7 +101,10 @@ function reloadDropdownData(tabId) {
           locationDropdown.innerHTML = '<option value="" disabled selected>Select Location</option>';
           if (data.locations && data.locations.length > 0) {
             data.locations.forEach(location => {
-              locationDropdown.innerHTML += `<option value="${location.id}">${location.address}, ${location.city}</option>`;
+              locationDropdown.innerHTML += `
+                <option value="${location.id}">
+                  ${location.street_ward}, ${location.district}, ${location.region}, ${location.country}
+                </option>`;
             });
           } else {
             locationDropdown.innerHTML += '<option value="" disabled>No locations available</option>';
