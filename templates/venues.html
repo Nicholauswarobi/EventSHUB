@@ -40,59 +40,188 @@
 
   <!-- Search and Filter Section -->
   <div class="search-filter">
-    <input type="text" placeholder="Search venues..." class="search-bar">
-    <select class="filter">
+    
+    <!-- Location Selection -->
+    <select class="filter" id="location-select" onchange="filterVenues()">
       <option value="">Select Location</option>
-      <option value="city1">City 1</option>
-      <option value="city2">City 2</option>
+      <!-- Locations will be dynamically loaded -->
     </select>
-    <select class="filter">
+    
+    <!-- Capacity Selection -->
+    <select class="filter" id="capacity-select" onchange="filterVenues()">
       <option value="">Capacity</option>
       <option value="small">1-50</option>
       <option value="medium">51-200</option>
       <option value="large">201+</option>
     </select>
-    <button class="search-btn">Search</button>
+    
+    <input type="text" placeholder="Search venues..." class="search-bar">
+    <button class="search-btn" onclick="filterVenues()">Search</button>
   </div>
 
   <!-- Venue Listings -->
-  <div class="venue-list">
-    <div class="venue-card">
-      <img src="/static/images/pexels-amar-14716282.jpg" alt="Venue 1">
-      <h4>Crystal Hall</h4>
-      <p>Price: 150,000 TSH</p>
-      <p>Capacity: 100 People</p>
-      <button class="book-btn">Book Now</button>
-    </div>
-    <div class="venue-card">
-      <img src="/static/images/pexels-gnasralla-3866658.jpg" alt="Venue 2">
-      <h4>Grand Plaza</h4>
-      <p>Price: 200,000 TSH</p>
-      <p>Capacity: 200 People</p>
-      <button class="book-btn">Book Now</button>
-    </div>
-    <div class="venue-card">
-      <img src="/static/images/pexels-pixabay-356065.jpg" alt="Venue 3">
-      <h4>Royal Garden</h4>
-      <p>Price: 180,000 TSH</p>
-      <p>Capacity: 150 People</p>
-      <button class="book-btn">Book Now</button>
-    </div>
-    <div class="venue-card">
-      <img src="/static/images/pexels-tuurt-391535.jpg" alt="Venue 4">
-      <h4>Sunset Arena</h4>
-      <p>Price: 250,000 TSH</p>
-      <p>Capacity: 300 People</p>
-      <button class="book-btn">Book Now</button>
-    </div>
-    <div class="venue-card">
-      <img src="/static/images/pexels-pixabay-356065.jpg" alt="Venue 5">/
-      <h4>Emerald Hall</h4>
-      <p>Price: 300,000 TSH</p>
-      <p>Capacity: 400 People</p>
-      <button class="book-btn">Book Now</button>
+  <div class="venue-list" id="venue-list">
+  {% for venue in venues %}
+  <div class="venue-card">
+    <img src="{{ venue.image_path }}" alt="{{ venue.name }}">
+    <h4>{{ venue.name }}</h4>
+    <p>Price: {{ venue.price }} TSH</p>
+    <p>Capacity: {{ venue.capacity }} People</p>
+    <button class="view-details-btn" onclick="openVenueModal(
+      '{{ venue.image_path }}',
+      '{{ venue.name }}',
+      '{{ venue.capacity }}',
+      '{{ venue.price }}',
+      '{{ venue.description }}',
+      '{{ venue.country }}',
+      '{{ venue.region }}',
+      '{{ venue.district }}',
+      '{{ venue.street_ward }}'
+    )">View Details</button>
+  </div>
+  {% endfor %}
+</div>
+
+  <!-- Venue Modal -->
+  <div id="venue-modal" class="modal hidden">
+    <div class="modal-content">
+      <span class="close-btn" onclick="closeVenueModal()">&times;</span>
+      <div class="modal-body">
+        <div class="modal-image">
+          <img id="modal-image" src="" alt="Venue Image">
+        </div>
+        <div class="modal-details">
+          <h4 id="modal-name"></h4>
+          <p><strong>Capacity:</strong> <span id="modal-capacity"></span> People</p>
+          <p><strong>Price:</strong> <span id="modal-price"></span> TSH</p>
+          <p><strong>Description:</strong> <span id="modal-description"></span></p>
+          <p><strong>Location:</strong> <span id="modal-location"></span></p>
+          <button class="book-btn">Book Now</button>
+        </div>
+      </div>
     </div>
   </div>
+
+  <script>
+  // Load all locations into the "Select Location" dropdown
+  function loadLocations() {
+    fetch('/get_locations')
+      .then(response => response.json())
+      .then(data => {
+        const locationSelect = document.getElementById('location-select');
+        locationSelect.innerHTML = '<option value="">Select Location</option>';
+        data.locations.forEach(location => {
+          const option = document.createElement('option');
+          option.value = location.id;
+          option.textContent = `${location.address}, ${location.country}, ${location.region}, ${location.district}`;
+          locationSelect.appendChild(option);
+        });
+      })
+      .catch(error => console.error('Error fetching locations:', error));
+  }
+
+  // Filter venues by capacity, location, or search term
+  function filterVenues() {
+    const capacity = document.getElementById('capacity-select').value;
+    const locationId = document.getElementById('location-select').value;
+    const searchTerm = document.querySelector('.search-bar').value.trim();
+
+    const queryParams = new URLSearchParams();
+    if (capacity) queryParams.append('capacity', capacity);
+    if (locationId) queryParams.append('location_id', locationId);
+    if (searchTerm) queryParams.append('search_term', searchTerm);
+
+    fetch(`/filter_venues?${queryParams.toString()}`)
+      .then(response => response.json())
+      .then(data => {
+        const venueList = document.getElementById('venue-list');
+        venueList.innerHTML = ''; // Clear existing venues
+
+        data.venues.forEach(venue => {
+          const venueCard = document.createElement('div');
+          venueCard.className = 'venue-card';
+          venueCard.innerHTML = `
+            <img src="${venue.image_path}" alt="${venue.name}">
+            <h4>${venue.name}</h4>
+            <p>Price: ${venue.price} TSH</p>
+            <p>Capacity: ${venue.capacity} People</p>
+            <button class="view-details-btn" onclick="openVenueModal(
+              '${venue.image_path}',
+              '${venue.name}',
+              '${venue.capacity}',
+              '${venue.price}',
+              '${venue.description}',
+              '${venue.country}',
+              '${venue.region}',
+              '${venue.district}',
+              '${venue.street_ward}'
+            )">View Details</button>
+          `;
+          venueList.appendChild(venueCard);
+        });
+      })
+      .catch(error => console.error('Error fetching venues:', error));
+  }
+
+  // Load venues on page load
+  function loadVenues() {
+    fetch('/filter_venues') // Fetch venues from the backend
+      .then(response => response.json())
+      .then(data => {
+        const venueList = document.getElementById('venue-list');
+        venueList.innerHTML = ''; // Clear existing venues
+
+        data.venues.forEach(venue => {
+          const venueCard = document.createElement('div');
+          venueCard.className = 'venue-card';
+          venueCard.innerHTML = `
+            <img src="${venue.image_path}" alt="${venue.name}">
+            <h4>${venue.name}</h4>
+            <p>Price: ${venue.price} TSH</p>
+            <p>Capacity: ${venue.capacity} People</p>
+            <button class="view-details-btn" onclick="openVenueModal(
+              '${venue.image_path}',
+              '${venue.name}',
+              '${venue.capacity}',
+              '${venue.price}',
+              '${venue.description}',
+              '${venue.country}',
+              '${venue.region}',
+              '${venue.district}',
+              '${venue.street_ward}'
+            )">View Details</button>
+          `;
+          venueList.appendChild(venueCard);
+        });
+      })
+      .catch(error => console.error('Error fetching venues:', error));
+  }
+
+  // Load venues and locations on page load
+  document.addEventListener('DOMContentLoaded', () => {
+    loadVenues(); // Load venues
+    loadLocations(); // Load locations
+  });
+
+  // Open the venue modal and populate it with details
+  function openVenueModal(imagePath, name, capacity, price, description, country, region, district, streetWard) {
+    const modal = document.getElementById('venue-modal');
+    modal.style.display = 'flex';
+
+    document.getElementById('modal-image').src = imagePath;
+    document.getElementById('modal-name').textContent = name;
+    document.getElementById('modal-capacity').textContent = capacity;
+    document.getElementById('modal-price').textContent = price;
+    document.getElementById('modal-description').textContent = description;
+    document.getElementById('modal-location').textContent = `${country}, ${region}, ${district}, ${streetWard}`;
+  }
+
+  // Close the venue modal
+  function closeVenueModal() {
+    const modal = document.getElementById('venue-modal');
+    modal.style.display = 'none';
+  }
+  </script>
 
   <!-- Footer Section -->
   <div class="footer">

@@ -2,6 +2,7 @@ from flask import Flask, jsonify, request, render_template, redirect, url_for, s
 import mysql.connector
 from mysql.connector import pooling
 from werkzeug.security import generate_password_hash, check_password_hash
+from markupsafe import Markup
 
 app = Flask(__name__, static_folder='static')
 app.secret_key = 'your_secret_key'  # Required for session management
@@ -319,10 +320,32 @@ def user_dashboard():
     return render_template('Userdashboard.html', user_signed_in=user_signed_in)
 
 
-@app.route('/venues')
+@app.route('/venues', methods=['GET'])
 def venues():
-    user_signed_in = session.get('user_signed_in', False)
-    return render_template('venues.html', user_signed_in=user_signed_in)
+    try:
+        user_signed_in = session.get('user_signed_in', False)
+
+        connection = connection_pool.get_connection()
+        cursor = connection.cursor(dictionary=True)
+
+        # Fetch all venues from both vendor and admin tables
+        cursor.execute("""
+            SELECT name, description, capacity, price, image_path
+            FROM vendor_venues
+            UNION
+            SELECT name, description, capacity, price, image_path
+            FROM admin_venues
+        """)
+        venues = cursor.fetchall()
+
+        cursor.close()
+        connection.close()
+
+
+        return render_template('venues.html', user_signed_in=user_signed_in, venues=venues)
+    except mysql.connector.Error as err:
+        print(f"Database error: {err}")
+        return jsonify({"success": False, "error": str(err)}), 500
 
 @app.route('/events')
 def events():
@@ -775,25 +798,14 @@ def get_locations():
         connection = connection_pool.get_connection()
         cursor = connection.cursor(dictionary=True)
 
-        user_role = session.get('user_role')
-        user_id = session.get('user_id')
-
-        if user_role == 'vendor':
-            # Fetch locations added by the vendor
-            cursor.execute("""
-                SELECT id, address, country, region, district, street_ward 
-                FROM vendor_locations 
-                WHERE vendor_id = %s
-            """, (user_id,))
-        elif user_role == 'admin':
-            # Fetch all locations added by admin
-            cursor.execute("""
-                SELECT id, address, country, region, district, street_ward 
-                FROM admin_locations
-            """)
-        else:
-            return jsonify({'error': 'Unauthorized access'}), 403
-
+        # Fetch all locations from vendor_locations and admin_locations
+        cursor.execute("""
+            SELECT id, address, country, region, district, street_ward 
+            FROM vendor_locations
+            UNION
+            SELECT id, address, country, region, district, street_ward 
+            FROM admin_locations
+        """)
         locations = cursor.fetchall()
 
         cursor.close()
@@ -838,6 +850,96 @@ def get_venues_and_services():
     except mysql.connector.Error as err:
         print(f"Error: {err}")
         return jsonify({'error': 'Failed to fetch venues and services'}), 500
+
+@app.route('/filter_venues', methods=['GET'])
+def filter_venues():
+    try:
+        capacity = request.args.get('capacity', None)  # Get selected capacity
+        location_id = request.args.get('location_id', None)  # Get selected location ID
+        search_term = request.args.get('search_term', None)  # Get search term
+
+        connection = connection_pool.get_connection()
+        cursor = connection.cursor(dictionary=True)
+
+        # Base queries with filters applied individually
+        vendor_query = """
+            SELECT v.name, v.description, v.capacity, v.price, v.image_path, 
+                   l.country, l.region, l.district, l.street_ward
+            FROM vendor_venues v
+            JOIN vendor_locations l ON v.location_id = l.id
+            WHERE 1=1
+        """
+        admin_query = """
+            SELECT a.name, a.description, a.capacity, a.price, a.image_path, 
+                   l.country, l.region, l.district, l.street_ward
+            FROM admin_venues a
+            JOIN admin_locations l ON a.location_id = l.id
+            WHERE 1=1
+        """
+
+        # Add filters to vendor query
+        vendor_filters = []
+        if capacity:
+            if capacity == 'small':
+                vendor_filters.append("v.capacity <= 50")
+            elif capacity == 'medium':
+                vendor_filters.append("v.capacity BETWEEN 51 AND 200")
+            elif capacity == 'large':
+                vendor_filters.append("v.capacity > 200")
+        if location_id:
+            vendor_filters.append("v.location_id = %s")
+        if search_term:
+            vendor_filters.append("v.name LIKE %s")
+
+        if vendor_filters:
+            vendor_query += " AND " + " AND ".join(vendor_filters)
+
+        # Add filters to admin query
+        admin_filters = []
+        if capacity:
+            if capacity == 'small':
+                admin_filters.append("a.capacity <= 50")
+            elif capacity == 'medium':
+                admin_filters.append("a.capacity BETWEEN 51 AND 200")
+            elif capacity == 'large':
+                admin_filters.append("a.capacity > 200")
+        if location_id:
+            admin_filters.append("a.location_id = %s")
+        if search_term:
+            admin_filters.append("a.name LIKE %s")
+
+        if admin_filters:
+            admin_query += " AND " + " AND ".join(admin_filters)
+
+        # Combine queries with UNION
+        final_query = f"{vendor_query} UNION {admin_query}"
+
+        # Prepare parameters for placeholders
+        params = []
+        if location_id:
+            params.append(location_id)
+        if search_term:
+            params.append(f"%{search_term}%")
+        if location_id:
+            params.append(location_id)
+        if search_term:
+            params.append(f"%{search_term}%")
+
+        cursor.execute(final_query, params)
+        venues = cursor.fetchall()
+
+        # Debugging: Print venues to the console
+        for v in venues:
+            print(v)  # Print each venue's details
+
+        cursor.close()
+        connection.close()
+
+        return jsonify({'venues': venues})
+    except mysql.connector.Error as err:
+        print(f"Error: {err}")
+        return jsonify({'error': 'Failed to fetch venues'}), 500
+
     
 if __name__ == '__main__':
     app.run(debug=True)
