@@ -181,18 +181,23 @@ def create_tables():
 
         # Create bookings table
         cursor.execute("""
-        CREATE TABLE IF NOT EXISTS bookings (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            user_id INT NOT NULL,
-            vendor_id INT NOT NULL,
-            venue_id INT,
-            service_id INT,
-            booking_date DATE NOT NULL,
-            FOREIGN KEY (user_id) REFERENCES users(id),
-            FOREIGN KEY (vendor_id) REFERENCES users(id),
-            FOREIGN KEY (venue_id) REFERENCES vendor_venues(id),
-            FOREIGN KEY (service_id) REFERENCES vendor_services(id)
-        )
+            CREATE TABLE IF NOT EXISTS bookings (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                user_id INT NOT NULL,
+                vendor_id INT NOT NULL,
+                venue_id INT NOT NULL,
+                venue_source ENUM('vendor', 'admin') NOT NULL,  -- Indicates the source of the venue
+                service_id VARCHAR(255),
+                booking_date DATE NOT NULL,
+                event VARCHAR(120) NOT NULL,
+                service_amount DECIMAL(10, 2) NOT NULL,
+                venue_amount DECIMAL(10, 2) NOT NULL,
+                total_cost DECIMAL(10, 2) NOT NULL,
+                payment_method VARCHAR(50) NOT NULL,
+                location VARCHAR(255) NOT NULL,
+                FOREIGN KEY (user_id) REFERENCES users(id),
+                FOREIGN KEY (vendor_id) REFERENCES users(id)
+                )
         """)
 
 
@@ -325,22 +330,25 @@ def venues():
     try:
         user_signed_in = session.get('user_signed_in', False)
 
+        update_venue_status()  # Update venue statuses dynamically based on the bookings table
+
         connection = connection_pool.get_connection()
         cursor = connection.cursor(dictionary=True)
 
-        # Fetch all venues from both vendor and admin tables
+        # Fetch only available venues from both vendor and admin tables
         cursor.execute("""
             SELECT name, description, capacity, price, image_path
             FROM vendor_venues
+            WHERE status = 'available'
             UNION
             SELECT name, description, capacity, price, image_path
             FROM admin_venues
+            WHERE status = 'available'
         """)
         venues = cursor.fetchall()
 
         cursor.close()
         connection.close()
-
 
         return render_template('venues.html', user_signed_in=user_signed_in, venues=venues)
     except mysql.connector.Error as err:
@@ -377,6 +385,9 @@ def index():
 def admin_dashboard():
     if not session.get('user_signed_in') or session.get('user_role') != 'admin':
         return redirect(url_for('eventhub'))  # Redirect if unauthorized
+
+    # Update venue statuses dynamically based on the bookings table
+    update_venue_status()
 
     connection = connection_pool.get_connection()
     cursor = connection.cursor(dictionary=True)
@@ -473,6 +484,8 @@ def vendor_dashboard():
     if not session.get('user_signed_in') or session.get('user_role') != 'vendor':
         return redirect(url_for('eventhub'))  # Redirect if unauthorized
 
+    update_venue_status()  # Update venue statuses dynamically based on the bookings table
+
     vendor_id = session['user_id']  # Get the logged-in vendor's ID
 
     connection = connection_pool.get_connection()
@@ -506,7 +519,12 @@ def vendor_dashboard():
     cursor.execute("SELECT COUNT(*) AS total_bookings FROM bookings WHERE vendor_id = %s", (vendor_id,))
     total_bookings = cursor.fetchone()['total_bookings']
 
-    cursor.execute("SELECT COUNT(*) AS booked_services FROM bookings WHERE vendor_id = %s AND service_id IS NOT NULL", (vendor_id,))
+    # Calculate services booked metric
+    cursor.execute("""
+        SELECT COUNT(*) AS booked_services 
+        FROM bookings 
+        WHERE vendor_id = %s AND service_id IS NOT NULL
+    """, (vendor_id,))
     booked_services = cursor.fetchone()['booked_services']
 
     cursor.close()
@@ -522,7 +540,7 @@ def vendor_dashboard():
         available_venues=available_venues,
         booked_venues=booked_venues,
         total_bookings=total_bookings,
-        booked_services=booked_services
+        booked_services=booked_services  # Pass the services booked metric
     )
 
 @app.route('/add_location', methods=['POST'])
@@ -853,6 +871,8 @@ def get_venues_and_services():
 
 @app.route('/filter_venues', methods=['GET'])
 def filter_venues():
+
+    
     try:
         capacity = request.args.get('capacity', None)  # Get selected capacity
         location_id = request.args.get('location_id', None)  # Get selected location ID
@@ -867,14 +887,14 @@ def filter_venues():
                    l.country, l.region, l.district, l.street_ward
             FROM vendor_venues v
             JOIN vendor_locations l ON v.location_id = l.id
-            WHERE 1=1
+            WHERE v.status = 'available'  -- Only fetch available venues
         """
         admin_query = """
             SELECT a.name, a.description, a.capacity, a.price, a.image_path, 
                    l.country, l.region, l.district, l.street_ward
             FROM admin_venues a
             JOIN admin_locations l ON a.location_id = l.id
-            WHERE 1=1
+            WHERE a.status = 'available'  -- Only fetch available venues
         """
 
         # Add filters to vendor query
@@ -928,10 +948,6 @@ def filter_venues():
         cursor.execute(final_query, params)
         venues = cursor.fetchall()
 
-        # Debugging: Print venues to the console
-        for v in venues:
-            print(v)  # Print each venue's details
-
         cursor.close()
         connection.close()
 
@@ -939,7 +955,175 @@ def filter_venues():
     except mysql.connector.Error as err:
         print(f"Error: {err}")
         return jsonify({'error': 'Failed to fetch venues'}), 500
+    
+
+@app.route('/get_services', methods=['GET'])
+def get_services():
+    try:
+        connection = connection_pool.get_connection()
+        cursor = connection.cursor(dictionary=True)
+
+        # Fetch services from both vendor_services and admin_services tables
+        cursor.execute("""
+            SELECT name, price, 'vendor' AS source
+            FROM vendor_services
+            UNION
+            SELECT name, price, 'admin' AS source
+            FROM admin_services
+        """)
+        services = cursor.fetchall()
+
+        cursor.close()
+        connection.close()
+
+        return jsonify({'services': services})
+    except mysql.connector.Error as err:
+        print(f"Error: {err}")
+        return jsonify({'error': 'Failed to fetch services'}), 500
 
     
+@app.route('/submit_booking', methods=['POST'])
+def submit_booking():
+    if not session.get('user_signed_in'):
+        return jsonify({'success': False, 'error': 'You must sign in to book a venue.'}), 403
+
+    try:
+        data = request.json
+        booking_date = data['booking_date']
+        venue_name = data['venue_name']
+        location = data['location']
+        event = data['event']
+        services = data['services']  # List of selected services
+        service_amount = data['service_amount']
+        venue_amount = data['venue_amount']
+        total_cost = data['total_cost']
+        payment_method = data['payment_method']
+
+        connection = connection_pool.get_connection()
+        cursor = connection.cursor(dictionary=True)
+
+        # Verify that the user exists
+        user_id = session.get('user_id')
+        cursor.execute("SELECT id FROM users WHERE id = %s", (user_id,))
+        user = cursor.fetchone()
+
+        if not user:
+            cursor.close()
+            connection.close()
+            return jsonify({'success': False, 'error': 'User not found'}), 400
+
+        # Fetch the venue ID and source based on the venue name
+        cursor.execute("""
+            SELECT id, 'vendor' AS source FROM vendor_venues WHERE name = %s
+            UNION
+            SELECT id, 'admin' AS source FROM admin_venues WHERE name = %s
+        """, (venue_name, venue_name))
+        venue = cursor.fetchone()
+
+        if not venue:
+            cursor.close()
+            connection.close()
+            return jsonify({'success': False, 'error': 'Venue not found'}), 400
+
+        venue_id = venue['id']
+        venue_source = venue['source']
+
+        # Convert selected services into a comma-separated string
+        services_string = ', '.join(services)
+
+        # Insert booking into the bookings table
+        cursor.execute("""
+            INSERT INTO bookings (user_id, vendor_id, venue_id, venue_source, booking_date, event, service_amount, venue_amount, total_cost, payment_method, service_id, location)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """, (user_id, session['user_id'], venue_id, venue_source, booking_date, event, service_amount, venue_amount, total_cost, payment_method, services_string, location))
+
+        # Update venue status to 'booked'
+        if venue_source == 'vendor':
+            cursor.execute("""
+                UPDATE vendor_venues SET status = 'booked' WHERE id = %s
+            """, (venue_id,))
+        elif venue_source == 'admin':
+            cursor.execute("""
+                UPDATE admin_venues SET status = 'booked' WHERE id = %s
+            """, (venue_id,))
+
+        connection.commit()
+        cursor.close()
+        connection.close()
+
+        return jsonify({'success': True})
+    except mysql.connector.Error as err:
+        print(f"Database error: {err}")
+        return jsonify({'success': False, 'error': str(err)}), 500
+
+
+
+def update_venue_status():
+    """Update venue status to 'available' if no bookings exist for the venue."""
+    try:
+        connection = connection_pool.get_connection()
+        cursor = connection.cursor(dictionary=True)
+
+        # Update vendor venues
+        cursor.execute("""
+            UPDATE vendor_venues
+            SET status = 'available'
+            WHERE id NOT IN (SELECT venue_id FROM bookings) AND status = 'booked'
+        """)
+
+        # Update admin venues
+        cursor.execute("""
+            UPDATE admin_venues
+            SET status = 'available'
+            WHERE id NOT IN (SELECT venue_id FROM bookings) AND status = 'booked'
+        """)
+
+        connection.commit()
+        cursor.close()
+        connection.close()
+    except mysql.connector.Error as err:
+        print(f"Error updating venue status: {err}")
+
+@app.route('/delete_booking', methods=['POST'])
+def delete_booking():
+    try:
+        data = request.json
+        booking_id = data['booking_id']  # ID of the booking to be deleted
+
+        connection = connection_pool.get_connection()
+        cursor = connection.cursor(dictionary=True)
+
+        # Fetch the venue ID associated with the booking
+        cursor.execute("""
+            SELECT venue_id FROM bookings WHERE id = %s
+        """, (booking_id,))
+        booking = cursor.fetchone()
+
+        if not booking:
+            cursor.close()
+            connection.close()
+            return jsonify({'success': False, 'error': 'Booking not found'}), 404
+
+        venue_id = booking['venue_id']
+
+        # Delete the booking from the bookings table
+        cursor.execute("""
+            DELETE FROM bookings WHERE id = %s
+        """, (booking_id,))
+
+        connection.commit()
+        cursor.close()
+        connection.close()
+
+        # Update venue statuses after deletion
+        update_venue_status()
+
+        return jsonify({'success': True, 'message': 'Booking deleted and venue statuses updated'})
+    except mysql.connector.Error as err:
+        print(f"Database error: {err}")
+        return jsonify({'success': False, 'error': str(err)}), 500
+
+
+
 if __name__ == '__main__':
     app.run(debug=True)

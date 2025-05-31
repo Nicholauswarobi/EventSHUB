@@ -130,9 +130,11 @@ body {
 .venue-list {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 20px;
+  gap: 10px;
   padding: 20px;
-  justify-content: center; /* Center cards when fewer cards are displayed */
+  justify-content: center; 
+  /* align-items: start; */
+
 }
 
 /* Venue Card Styling */
@@ -252,7 +254,7 @@ body {
 }
 
 
-/* Modal Styling */
+/* General Modal Styling */
 .modal {
   display: none;
   position: fixed;
@@ -319,3 +321,195 @@ body {
 .book-btn:hover {
   background: #2980b9;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* Booking Modal Styling */
+.booking-modal {
+  display: none;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1000;
+  background-color: #ffffff;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
+  width: 90%;
+  max-width: 600px; /* Increased width for better fit */
+  max-height: 75%; /* Reduced height */
+  overflow-y: auto; /* Add vertical scrolling */
+  padding: 25px;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+/* Modal Content */
+.booking-modal-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* Center items vertically */
+  align-items: center; /* Center items horizontally */
+  gap: 20px; /* Increased spacing for better readability */
+  width: 100%; /* Ensure content takes full width */
+}
+
+.hidden {
+  display: none;
+}
+
+/* Modal Heading */
+.booking-modal-body h3 {
+  font-size: 2em; /* Larger heading size */
+  margin-bottom: 15px;
+  text-align: center;
+  color: #2c3e50; /* Darker color for better contrast */
+  font-weight: bold;
+}
+
+/* Booking Modal Body Styling */
+.booking-modal-body {
+  width: 90%; /* Increased width for better alignment */
+  margin: 0 auto; /* Center the modal body horizontally */
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* Center form elements vertically */
+  align-items: center; /* Center form elements horizontally */
+  gap: 20px; /* Increased spacing for better readability */
+}
+
+/* Form Styling */
+.booking-modal-body form {
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* Center form elements vertically */
+  align-items: center; /* Center form elements horizontally */
+  gap: 20px; /* Increased spacing for better readability */
+  width: 100%; /* Ensure form takes full width */
+}
+
+/* Label Styling */
+.booking-modal-body label {
+  font-weight: bold;
+  margin-bottom: 5px;
+  color: #34495e; /* Slightly darker color for labels */
+  font-size: 1.1em; /* Slightly larger font size */
+  text-align: center; /* Center labels */
+  width: 100%; /* Ensure labels span the full width */
+}
+
+/* Input and Select Styling */
+.booking-modal-body input,
+.booking-modal-body select {
+  width: 100%; /* Increased width for better alignment */
+  padding: 12px; /* Increased padding for better usability */
+  border: 1px solid #ccc; /* Softer border color */
+  border-radius: 8px; /* Rounded corners */
+  font-size: 1em;
+  background-color: #f9f9f9; /* Light background for inputs */
+  transition: border-color 0.3s ease-in-out;
+}
+
+.booking-modal-body input:focus,
+.booking-modal-body select:focus {
+  border-color: #3498db; /* Highlight border on focus */
+  outline: none;
+}
+
+.booking-modal-body select[multiple] {
+  height: 150px; /* Increased height for better visibility */
+}
+
+/* Submit Button Styling */
+.booking-modal-body .submit-btn {
+  background-color: #3498db;
+  color: #ffffff;
+  border: none;
+  padding: 12px 20px; /* Increased padding for better usability */
+  border-radius: 8px; /* Rounded corners */
+  cursor: pointer;
+  font-size: 1.1em; /* Slightly larger font size */
+  font-weight: bold;
+  transition: background-color 0.3s ease-in-out, transform 0.3s ease-in-out;
+}
+
+.booking-modal-body .submit-btn:hover {
+  background-color: #2980b9;
+  transform: scale(1.05); /* Slight scaling effect on hover */
+}
+
+/* Close Button Styling */
+.booking-close-btn {
+  position: absolute;
+  top: 10px;
+  right: 15px; /* Adjusted position for better fit */
+  font-size: 1.8em; /* Larger close button size */
+  cursor: pointer;
+  color: #333333;
+  transition: color 0.3s ease-in-out;
+}
+
+.booking-close-btn:hover {
+  color: #000000;
+}
+
+
+
+/* Services Dropdown Styling */
+#services {
+  width: 100%; /* Full width for better alignment */
+  padding: 12px; /* Increased padding for better usability */
+  border: 1px solid #ccc; /* Softer border color */
+  border-radius: 8px; /* Rounded corners */
+  font-size: 1em;
+  background-color: #f9f9f9; /* Light background for inputs */
+  transition: border-color 0.3s ease-in-out;
+}
+
+#services:focus {
+  border-color: #3498db; /* Highlight border on focus */
+  outline: none;
+}
+
+#services[multiple] {
+  height: 150px; /* Increased height for better visibility */
+}
+
+
+  /* Notification styles */
+  .notification {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-size: 16px;
+    z-index: 1000;
+    text-align: center;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  }
+
+  .notification.success {
+    background-color: #4caf50;
+    color: white;
+  }
+
+  .notification.error {
+    background-color: #f44336;
+    color: white;
+  }

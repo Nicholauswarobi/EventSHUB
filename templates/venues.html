@@ -96,13 +96,72 @@
           <p><strong>Price:</strong> <span id="modal-price"></span> TSH</p>
           <p><strong>Description:</strong> <span id="modal-description"></span></p>
           <p><strong>Location:</strong> <span id="modal-location"></span></p>
-          <button class="book-btn">Book Now</button>
+          <button class="book-btn" onclick="openBookingModal()">Book Now</button>
         </div>
       </div>
     </div>
   </div>
 
+
+<!-- Booking Modal -->
+<div id="booking-modal" class="booking-modal hidden">
+  <div class="booking-modal-content">
+    <span class="booking-close-btn" onclick="closeBookingModal()">&times;</span>
+    <div class="booking-modal-body">
+      <h3>Book Venue</h3>
+      <form id="booking-form">
+        <!-- Booking Date -->
+        <label for="booking-date">Booking Date:</label>
+        <input type="date" id="booking-date" name="booking-date" required>
+
+        <!-- Venue Name -->
+        <label for="venue-name">Venue Name:</label>
+        <input type="text" id="venue-name" name="venue-name" readonly>
+
+        <!-- Location -->
+        <label for="location">Location:</label>
+        <input type="text" id="location" name="location" readonly>
+
+        <!-- Event -->
+        <label for="event">Event:</label>
+        <input type="text" id="event" name="event" required>
+
+        <!-- Services -->
+        <label for="services">Services:</label>
+        <select id="services" name="services" multiple onchange="calculateServiceCost()">
+          <!-- Services will be dynamically loaded -->
+        </select>
+
+        <!-- Service Amount -->
+        <label for="service-amount">Service Amount:</label>
+        <input type="number" id="service-amount" name="service-amount" readonly>
+
+        <!-- Venue Amount -->
+        <label for="venue-amount">Venue Amount:</label>
+        <input type="number" id="venue-amount" name="venue-amount" readonly>
+
+        <!-- Total Cost -->
+        <label for="total-cost">Total Cost:</label>
+        <input type="number" id="total-cost" name="total-cost" readonly>
+
+        <!-- Payment Method -->
+        <label for="payment-method">Payment Method:</label>
+        <select id="payment-method" name="payment-method" required>
+          <option value="Credit Card">Credit Card</option>
+          <option value="Mobile Money">Mobile Money</option>
+          <option value="Bank Transfer">Bank Transfer</option>
+        </select>
+
+        <!-- Submit Button -->
+        <button type="button" class="submit-btn" onclick="submitBooking()">Submit Booking</button>
+      </form>
+    </div>
+  </div>
+</div>
+  
+
   <script>
+
   // Load all locations into the "Select Location" dropdown
   function loadLocations() {
     fetch('/get_locations')
@@ -132,35 +191,35 @@
     if (searchTerm) queryParams.append('search_term', searchTerm);
 
     fetch(`/filter_venues?${queryParams.toString()}`)
-      .then(response => response.json())
-      .then(data => {
-        const venueList = document.getElementById('venue-list');
-        venueList.innerHTML = ''; // Clear existing venues
+        .then(response => response.json())
+        .then(data => {
+            const venueList = document.getElementById('venue-list');
+            venueList.innerHTML = ''; // Clear existing venues
 
-        data.venues.forEach(venue => {
-          const venueCard = document.createElement('div');
-          venueCard.className = 'venue-card';
-          venueCard.innerHTML = `
-            <img src="${venue.image_path}" alt="${venue.name}">
-            <h4>${venue.name}</h4>
-            <p>Price: ${venue.price} TSH</p>
-            <p>Capacity: ${venue.capacity} People</p>
-            <button class="view-details-btn" onclick="openVenueModal(
-              '${venue.image_path}',
-              '${venue.name}',
-              '${venue.capacity}',
-              '${venue.price}',
-              '${venue.description}',
-              '${venue.country}',
-              '${venue.region}',
-              '${venue.district}',
-              '${venue.street_ward}'
-            )">View Details</button>
-          `;
-          venueList.appendChild(venueCard);
-        });
-      })
-      .catch(error => console.error('Error fetching venues:', error));
+            data.venues.forEach(venue => {
+                const venueCard = document.createElement('div');
+                venueCard.className = 'venue-card';
+                venueCard.innerHTML = `
+                    <img src="${venue.image_path}" alt="${venue.name}">
+                    <h4>${venue.name}</h4>
+                    <p>Price: ${venue.price} TSH</p>
+                    <p>Capacity: ${venue.capacity} People</p>
+                    <button class="view-details-btn" onclick="openVenueModal(
+                        '${venue.image_path}',
+                        '${venue.name}',
+                        '${venue.capacity}',
+                        '${venue.price}',
+                        '${venue.description}',
+                        '${venue.country}',
+                        '${venue.region}',
+                        '${venue.district}',
+                        '${venue.street_ward}'
+                    )">View Details</button>
+                `;
+                venueList.appendChild(venueCard);
+            });
+        })
+        .catch(error => console.error('Error fetching venues:', error));
   }
 
   // Load venues on page load
@@ -203,10 +262,41 @@
     loadLocations(); // Load locations
   });
 
+  // Load services into the "Services" dropdown
+  function loadServices() {
+    fetch('/get_services') // Fetch services from the backend
+      .then(response => response.json())
+      .then(data => {
+        const servicesSelect = document.getElementById('services');
+        servicesSelect.innerHTML = ''; // Clear existing options
+        data.services.forEach(service => {
+          const option = document.createElement('option');
+          option.value = service.price; // Use service price as the value
+          option.textContent = `${service.name} (${service.price} TSH)`;
+          servicesSelect.appendChild(option);
+        });
+      })
+      .catch(error => console.error('Error fetching services:', error));
+  }
+
+  // Calculate the total cost of selected services
+  function calculateServiceCost() {
+    const servicesSelect = document.getElementById('services');
+    const selectedOptions = Array.from(servicesSelect.selectedOptions);
+    const serviceCost = selectedOptions.reduce((total, option) => total + parseInt(option.value), 0);
+    document.getElementById('service-amount').value = serviceCost;
+
+    // Update the total cost (venue price + service cost)
+    const venueAmount = parseInt(document.getElementById('venue-amount').value) || 0;
+    const totalCost = venueAmount + serviceCost;
+    document.getElementById('total-cost').value = totalCost;
+  }
+
   // Open the venue modal and populate it with details
   function openVenueModal(imagePath, name, capacity, price, description, country, region, district, streetWard) {
     const modal = document.getElementById('venue-modal');
-    modal.style.display = 'flex';
+    modal.style.display = 'flex'; // Show modal
+    modal.style.animation = 'fadeIn 0.5s ease-in-out'; // Apply fade-in animation
 
     document.getElementById('modal-image').src = imagePath;
     document.getElementById('modal-name').textContent = name;
@@ -219,7 +309,101 @@
   // Close the venue modal
   function closeVenueModal() {
     const modal = document.getElementById('venue-modal');
-    modal.style.display = 'none';
+    modal.style.display = 'none'; // Hide modal
+  }
+
+  // Open the booking modal
+  function openBookingModal() {
+    const bookingModal = document.getElementById('booking-modal');
+    bookingModal.style.display = 'block'; // Show modal
+    bookingModal.style.animation = 'fadeIn 0.5s ease-in-out'; // Apply fade-in animation
+
+    // Populate booking modal fields with venue details
+    document.getElementById('venue-name').value = document.getElementById('modal-name').textContent;
+    document.getElementById('location').value = document.getElementById('modal-location').textContent;
+    document.getElementById('venue-amount').value = document.getElementById('modal-price').textContent;
+
+    // Load services into the dropdown
+    loadServices();
+
+    // Reset service amount and total cost
+    document.getElementById('service-amount').value = 0;
+    document.getElementById('total-cost').value = document.getElementById('venue-amount').value;
+  }
+
+  // Close the booking modal
+  function closeBookingModal() {
+    const bookingModal = document.getElementById('booking-modal');
+    bookingModal.style.display = 'none'; // Hide modal
+  }
+
+  // Function to display notifications at the top center
+  function showNotification(message, type) {
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`; // Add type for styling (success or error)
+    notification.textContent = message;
+
+    // Append notification to the body
+    document.body.appendChild(notification);
+
+    // Automatically remove the notification after 3 seconds
+    setTimeout(() => {
+      notification.remove();
+    }, 3000);
+  }
+
+  // Submit booking and notify if not signed in
+  function submitBooking() {
+    const userSignedIn = {{ user_signed_in | tojson | safe }}; // Pass the signed-in status from Flask
+
+    if (!userSignedIn) {
+        showNotification('You must sign in to book a venue. Please log in or register to continue.', 'error');
+        return; // Stop further execution
+    }
+
+    const bookingDate = document.getElementById('booking-date').value;
+    const venueName = document.getElementById('venue-name').value;
+    const location = document.getElementById('location').value;
+    const event = document.getElementById('event').value;
+    const selectedServices = Array.from(document.getElementById('services').selectedOptions).map(option => option.textContent);
+    const serviceAmount = document.getElementById('service-amount').value;
+    const venueAmount = document.getElementById('venue-amount').value;
+    const totalCost = document.getElementById('total-cost').value;
+    const paymentMethod = document.getElementById('payment-method').value;
+
+    const bookingData = {
+        booking_date: bookingDate,
+        venue_name: venueName,
+        location: location,
+        event: event,
+        services: selectedServices,
+        service_amount: serviceAmount,
+        venue_amount: venueAmount,
+        total_cost: totalCost,
+        payment_method: paymentMethod
+    };
+
+    fetch('/submit_booking', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(bookingData)
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('Congratulations! We reserved your booking.', 'success');
+                closeBookingModal();
+                loadVenues(); // Reload venues to remove booked venue
+            } else {
+                showNotification('Error submitting booking: ' + data.error, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('An unexpected error occurred. Please try again.', 'error');
+        });
   }
   </script>
 
@@ -242,6 +426,5 @@
     </div>
   </div>
   </div>
-  
 </body>
 </html>
