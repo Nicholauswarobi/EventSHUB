@@ -363,6 +363,9 @@ def get_unique_bookings(bookings):
             seen.add(key)
             unique.append(b)
     return unique
+
+
+
 @app.route('/userdashboard', methods=['GET'])
 def user_dashboard():
     if not session.get('user_signed_in'):
@@ -375,16 +378,16 @@ def user_dashboard():
         # Fetch bookings from both admin_bookings and vendor_bookings
         cursor.execute("""
             SELECT b.id, b.booking_date, b.event, b.service_amount, b.venue_amount, b.total_cost, 
-                   b.payment_method, b.payment_status, b.location, u.username AS user_name, 
-                   v.name AS venue_name, v.image_path, b.service_id
+                b.payment_method, b.payment_status, b.location, u.username AS user_name, 
+                v.name AS venue_name, v.image_path, b.service_id
             FROM vendor_bookings b
             LEFT JOIN users u ON b.user_id = u.id
             LEFT JOIN vendor_venues v ON b.venue_id = v.id
             WHERE b.user_id = %s
             UNION
             SELECT b.id, b.booking_date, b.event, b.service_amount, b.venue_amount, b.total_cost, 
-                   b.payment_method, b.payment_status, b.location, u.username AS user_name, 
-                   a.name AS venue_name, a.image_path, b.service_id
+                b.payment_method, b.payment_status, b.location, u.username AS user_name, 
+                a.name AS venue_name, a.image_path, b.service_id
             FROM admin_bookings b
             LEFT JOIN users u ON b.user_id = u.id
             LEFT JOIN admin_venues a ON b.venue_id = a.id
@@ -469,6 +472,8 @@ def contact():
 def index():
     form_type = request.args.get('form', 'login')  # Default to 'login' if no form type is specified
     return render_template('index.html', form=form_type)
+
+    
 
 @app.route('/admin', methods=['GET', 'POST'])
 def admin_dashboard():

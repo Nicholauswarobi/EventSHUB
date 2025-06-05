@@ -21,18 +21,7 @@
     <div class="top-nav">
     <a href="{{ url_for('eventhub') }}">Home</a>
     <a href="{{ url_for('venues') }}">Venues</a>
-<div class="dropdown">
-    <a href="{{ url_for('events') }}" class="dropdown-toggle">Events &#9662;</a>
-    <div class="dropdown-content">
-    <a href="#">Weddings</a>
-    <a href="#">Corporate Events</a>
-    <a href="#">Birthday Parties</a>
-    <a href="#">Concerts</a>
-    <a href="#">Workshops</a>
-    <a href="#">Exhibitions</a>
-    <a href="{{ url_for('events') }}">All Events</a>
-    </div>
-</div>
+    <a href="{{ url_for('events') }}">Events</a>
     <a href="{{ url_for('about') }}">About</a>
     <a href="{{ url_for('contact') }}">Contact</a>
   </div>
