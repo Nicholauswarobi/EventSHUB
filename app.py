@@ -49,9 +49,20 @@ def create_tables():
             username VARCHAR(80) NOT NULL UNIQUE,
             email VARCHAR(120) NOT NULL UNIQUE,
             password VARCHAR(200) NOT NULL,
-            role ENUM('user', 'vendor') DEFAULT 'user'
+            role ENUM('user', 'vendor') DEFAULT 'user',
+            wallet_balance DECIMAL(10, 2) DEFAULT 0
         )
         """)
+
+        # Create admin table
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS admin_wallet (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            balance DECIMAL(10, 2) DEFAULT 0
+        )
+        """)
+        cursor.execute("INSERT IGNORE INTO admin_wallet (balance) VALUES (0)")
+
 
         # Create vendor_locations table
         cursor.execute("""
@@ -178,28 +189,6 @@ def create_tables():
         )
         """)
 
-
-        # Create bookings table
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS bookings (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                user_id INT NULL,
-                vendor_id INT NULL,
-                venue_id INT NOT NULL,
-                venue_source ENUM('vendor', 'admin') NOT NULL,  -- Indicates the source of the venue
-                service_id VARCHAR(255),
-                booking_date DATE NOT NULL,
-                event VARCHAR(120) NOT NULL,
-                service_amount DECIMAL(10, 2) NOT NULL,
-                venue_amount DECIMAL(10, 2) NOT NULL,
-                total_cost DECIMAL(10, 2) NOT NULL,
-                payment_method VARCHAR(50) NOT NULL,
-                location VARCHAR(255) NOT NULL,
-                payment_status ENUM('Paid', 'Unpaid', 'Pending') DEFAULT 'Pending',
-                FOREIGN KEY (user_id) REFERENCES users(id),
-                FOREIGN KEY (vendor_id) REFERENCES users(id)
-                )
-        """)
 
 
         # Create admin_bookings table
@@ -492,6 +481,9 @@ def admin_dashboard():
     connection = connection_pool.get_connection()
     cursor = connection.cursor(dictionary=True)
 
+    # Fetch wallet balance for admin
+    wallet_balance = calculate_wallet_balance(None, 'admin')
+
     # Fetch total members (users)
     cursor.execute("SELECT COUNT(*) AS total_users FROM users WHERE role = 'user'")
     total_users = cursor.fetchone()['total_users']
@@ -564,6 +556,53 @@ def admin_dashboard():
     """)
     all_services = cursor.fetchall()
 
+    # Fetch data for the chart (most booked venues and services)
+    cursor.execute("""
+        SELECT name AS label, COUNT(*) AS count
+        FROM (
+            -- Booked venues from admin
+            SELECT v.name, b.venue_id FROM admin_venues v
+            JOIN admin_bookings b ON v.id = b.venue_id
+            UNION ALL
+            -- Booked venues from vendors
+            SELECT v.name, b.venue_id FROM vendor_venues v
+            JOIN vendor_bookings b ON v.id = b.venue_id
+            UNION ALL
+            -- Booked services from admin
+            SELECT s.name, b.service_id FROM admin_services s
+            JOIN admin_bookings b ON FIND_IN_SET(s.id, b.service_id)
+            UNION ALL
+            -- Booked services from vendors
+            SELECT s.name, b.service_id FROM vendor_services s
+            JOIN vendor_bookings b ON FIND_IN_SET(s.id, b.service_id)
+        ) AS combined
+        GROUP BY label
+        ORDER BY count DESC
+        LIMIT 10
+    """)
+    chart_data = cursor.fetchall()
+    chart_labels = [item['label'] for item in chart_data]
+    chart_counts = [item['count'] for item in chart_data]
+
+    # Fetch recent bookings
+    cursor.execute("""
+        SELECT * FROM (
+            SELECT b.booking_date, b.event, b.location, u.username, v.name AS venue_name, NULL AS vendor_name
+            FROM admin_bookings b
+            LEFT JOIN users u ON b.user_id = u.id
+            LEFT JOIN admin_venues v ON b.venue_id = v.id
+            UNION ALL
+            SELECT b.booking_date, b.event, b.location, u.username, v.name AS venue_name, u2.username AS vendor_name
+            FROM vendor_bookings b
+            LEFT JOIN users u ON b.user_id = u.id
+            LEFT JOIN vendor_venues v ON b.venue_id = v.id
+            LEFT JOIN users u2 ON b.vendor_id = u2.id
+        ) AS combined_bookings
+        ORDER BY booking_date DESC
+        LIMIT 5
+    """)
+    recent_bookings = cursor.fetchall()
+
     cursor.close()
     connection.close()
 
@@ -572,12 +611,17 @@ def admin_dashboard():
         total_users=total_users,
         total_vendors=total_vendors,
         available_venues=available_venues,
-        booked_venues=booked_venues,
-        total_services=total_services,
         all_locations=all_locations,
         all_venues=all_venues,
-        all_services=all_services
+        all_services=all_services,
+        booked_venues=booked_venues,
+        total_services=total_services,
+        recent_bookings=recent_bookings,
+        chart_labels=chart_labels,
+        chart_data=chart_counts,
+        wallet_balance=wallet_balance
     )
+
 
 @app.route('/vendor', methods=['GET', 'POST'])
 def vendor_dashboard():
@@ -587,6 +631,9 @@ def vendor_dashboard():
     update_venue_status()  # Update venue statuses dynamically based on the bookings table
 
     vendor_id = session['user_id']  # Get the logged-in vendor's ID
+
+    # Fetch wallet balance for vendor
+    wallet_balance = calculate_wallet_balance(vendor_id, 'vendor')
 
     connection = connection_pool.get_connection()
     cursor = connection.cursor(dictionary=True)
@@ -628,6 +675,43 @@ def vendor_dashboard():
     """, (vendor_id,))
     booked_services = cursor.fetchone()['booked_services']
 
+
+    # Fetch data for the chart (most booked venues and services for the vendor)
+    cursor.execute("""
+        SELECT name AS label, COUNT(*) AS count
+        FROM (
+            -- Booked venues
+            SELECT v.name, b.venue_id FROM vendor_venues v
+            JOIN vendor_bookings b ON v.id = b.venue_id
+            WHERE v.vendor_id = %s
+            UNION ALL
+            -- Booked services
+            SELECT s.name, b.service_id FROM vendor_services s
+            JOIN vendor_bookings b ON FIND_IN_SET(s.id, b.service_id)
+            WHERE s.vendor_id = %s
+        ) AS combined
+        GROUP BY label
+        ORDER BY count DESC
+        LIMIT 10
+    """, (vendor_id, vendor_id))
+    chart_data = cursor.fetchall()
+    chart_labels = [item['label'] for item in chart_data]
+    chart_counts = [item['count'] for item in chart_data]
+
+# Fetch recent bookings based on booked services added by vendors
+    cursor.execute("""
+        SELECT b.booking_date, b.event, b.location, v.name AS venue_name, 
+            GROUP_CONCAT(s.name SEPARATOR ', ') AS service_name
+        FROM vendor_bookings b
+        LEFT JOIN vendor_venues v ON b.venue_id = v.id
+        LEFT JOIN vendor_services s ON FIND_IN_SET(s.id, b.service_id)
+        WHERE b.vendor_id = %s
+        GROUP BY b.id
+        ORDER BY b.booking_date DESC
+        LIMIT 5
+    """, (vendor_id,))
+    recent_bookings = cursor.fetchall()
+
     cursor.close()
     connection.close()
 
@@ -641,8 +725,81 @@ def vendor_dashboard():
         available_venues=available_venues,
         booked_venues=booked_venues,
         total_bookings=total_bookings,
-        booked_services=booked_services  # Pass the services booked metric
+        booked_services=booked_services,
+        recent_bookings=recent_bookings,
+        chart_labels=chart_labels,
+        chart_data=chart_counts,
+        wallet_balance=wallet_balance
     )
+
+
+def calculate_wallet_balance(user_id, user_role):
+    """Calculate the wallet balance for the logged-in user."""
+    try:
+        connection = connection_pool.get_connection()
+        cursor = connection.cursor(dictionary=True)
+
+        # Initialize default values
+        venue_income = 0
+        service_income = 0
+
+        if user_role == 'vendor':
+            # Calculate wallet balance for vendor
+            cursor.execute("""
+                SELECT 
+                    SUM(CASE 
+                        WHEN b.vendor_id IS NOT NULL THEN b.venue_amount * 0.65 
+                        ELSE 0 
+                    END) AS venue_income,
+                    SUM(CASE 
+                        WHEN FIND_IN_SET(s.id, b.service_id) THEN s.price * 0.65 
+                        ELSE 0 
+                    END) AS service_income
+                FROM vendor_bookings b
+                LEFT JOIN vendor_services s ON FIND_IN_SET(s.id, b.service_id)
+                WHERE b.vendor_id = %s
+            """, (user_id,))
+            result = cursor.fetchone()
+            if result:
+                venue_income = result['venue_income'] or 0
+                service_income = result['service_income'] or 0
+
+        elif user_role == 'admin':
+            # Calculate wallet balance for admin
+            cursor.execute("""
+                SELECT 
+                    SUM(venue_amount) AS venue_income,
+                    SUM(service_amount) AS service_income
+                FROM admin_bookings
+            """)
+            result = cursor.fetchone()
+            if result:
+                venue_income = result['venue_income'] or 0
+                service_income = result['service_income'] or 0
+
+            # Add 35% of vendor bookings to admin wallet
+            cursor.execute("""
+                SELECT 
+                    SUM(b.venue_amount * 0.35) AS vendor_venue_income,
+                    SUM(s.price * 0.35) AS vendor_service_income
+                FROM vendor_bookings b
+                LEFT JOIN vendor_services s ON FIND_IN_SET(s.id, b.service_id)
+                WHERE b.vendor_id IS NOT NULL
+            """)
+            vendor_result = cursor.fetchone()
+            if vendor_result:
+                venue_income += vendor_result['vendor_venue_income'] or 0
+                service_income += vendor_result['vendor_service_income'] or 0
+
+        # Calculate total wallet balance
+        wallet_balance = venue_income + service_income
+
+        cursor.close()
+        connection.close()
+        return wallet_balance
+    except mysql.connector.Error as err:
+        print(f"Database error: {err}")
+        return 0
 
 @app.route('/add_location', methods=['POST'])
 def add_location():
@@ -1093,10 +1250,12 @@ def submit_booking():
         venue_name = data['venue_name']
         location = data['location']
         event = data['event']
-        services = data['services']  # List of selected services
-        service_amount = data['service_amount']
-        venue_amount = data['venue_amount']
-        total_cost = data['total_cost']
+        services = data['services']  # List of selected service IDs
+
+        # Convert numeric fields to float
+        service_amount = float(data['service_amount'])
+        venue_amount = float(data['venue_amount'])
+        total_cost = float(data['total_cost'])
         payment_method = data['payment_method']
 
         connection = connection_pool.get_connection()
@@ -1132,6 +1291,68 @@ def submit_booking():
         # Convert selected services into a comma-separated string
         services_string = ','.join(services)
 
+        # Calculate distribution for venue cost
+        venue_distribution = {}
+        if venue_source == 'vendor':
+            venue_distribution['vendor'] = venue_amount * 0.65
+            venue_distribution['admin'] = venue_amount * 0.35
+        elif venue_source == 'admin':
+            venue_distribution['admin'] = venue_amount
+
+        # Update wallet balance for venue owner
+        if venue_source == 'vendor':
+            cursor.execute("""
+                UPDATE users
+                SET wallet_balance = wallet_balance + %s
+                WHERE id = %s
+            """, (venue_distribution['vendor'], vendor_id))
+        elif venue_source == 'admin':
+            cursor.execute("""
+                UPDATE admin_wallet
+                SET balance = balance + %s
+                WHERE id = 1
+            """, (venue_distribution['admin'],))
+
+        # Calculate distribution for service cost
+        service_distribution = {'vendor': 0, 'admin': 0}
+        if services:
+            for service_id in services:
+                cursor.execute("""
+                    SELECT s.id, s.vendor_id, 'vendor' AS source FROM vendor_services s WHERE s.id = %s
+                    UNION
+                    SELECT s.id, NULL AS vendor_id, 'admin' AS source FROM admin_services s WHERE s.id = %s
+                """, (service_id, service_id))
+                service = cursor.fetchone()
+
+                if service:
+                    service_cost = service_amount / len(services)  # Divide service cost equally among services
+                    if service['source'] == 'vendor':
+                        service_distribution['vendor'] += service_cost * 0.65
+                        service_distribution['admin'] += service_cost * 0.35
+
+                        # Update vendor wallet balance
+                        cursor.execute("""
+                            UPDATE users
+                            SET wallet_balance = wallet_balance + %s
+                            WHERE id = %s
+                        """, (service_cost * 0.65, service['vendor_id']))
+
+                        # Update admin wallet balance for the remaining 35%
+                        cursor.execute("""
+                            UPDATE admin_wallet
+                            SET balance = balance + %s
+                            WHERE id = 1
+                        """, (service_cost * 0.35,))
+                    elif service['source'] == 'admin':
+                        service_distribution['admin'] += service_cost
+
+                        # Update admin wallet balance
+                        cursor.execute("""
+                            UPDATE admin_wallet
+                            SET balance = balance + %s
+                            WHERE id = 1
+                        """, (service_cost,))
+
         # Insert booking into the appropriate table
         if venue_source == 'vendor':
             cursor.execute("""
@@ -1158,11 +1379,15 @@ def submit_booking():
         cursor.close()
         connection.close()
 
-        return jsonify({'success': True})
+        return jsonify({
+            'success': True,
+            'venue_distribution': venue_distribution,
+            'service_distribution': service_distribution
+        })
     except mysql.connector.Error as err:
         print(f"Database error: {err}")
         return jsonify({'success': False, 'error': str(err)}), 500
-
+        
 
 def update_venue_status():
     """Update venue status to 'available' if no bookings exist for the venue."""

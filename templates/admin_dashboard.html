@@ -6,45 +6,131 @@
   <title>Admin Dashboard</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='styles/admin.css') }}">
   <link rel="stylesheet" href="/static/styles/admin.css">
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
   <!-- Background Overlay -->
   <div class="overlay"></div>
 
   <!-- Header Section -->
-  <header class="header">
+<div class="header-container">
+  <div class="header">
     <h1>Admin Dashboard</h1>
     <p>Manage your platform efficiently</p>
-  </header>
+  </div>
+  <div class="wallet-balance-right">
+    <h4>Wallet Balance</h4>
+    <p>Tsh {{ wallet_balance }}</p>
+  </div>
+</div>
 
   <!-- Metrics Section -->
   <main>
     <div class="metrics">
+      <!-- Total Members -->
       <div class="metric-card">
-        <h5>Total Members</h5>
-        <h3>{{ total_users }}</h3>
+        <div class="metric-icon">
+          <img src="{{ url_for('static', filename='images/group.png') }}" alt="Users Icon">
+        </div>
+        <div class="metric-info">
+          <h5>Total Members</h5>
+          <h3>{{ total_users }}</h3>
+        </div>
       </div>
+
+      <!-- Available Venues -->
       <div class="metric-card">
-        <h5>Available Venues</h5>
-        <h3>{{ available_venues }}</h3>
+        <div class="metric-icon">
+          <img src="{{ url_for('static', filename='images/location.png') }}" alt="Venues Icon">
+        </div>
+        <div class="metric-info">
+          <h5>Available Venues</h5>
+          <h3>{{ available_venues }}</h3>
+        </div>
       </div>
+
+      <!-- Total Vendors -->
       <div class="metric-card">
-        <h5>Total Vendors</h5>
-        <h3>{{ total_vendors }}</h3>
+        <div class="metric-icon">
+          <img src="{{ url_for('static', filename='images/vendor.png') }}" alt="Vendors Icon">
+        </div>
+        <div class="metric-info">
+          <h5>Total Vendors</h5>
+          <h3>{{ total_vendors }}</h3>
+        </div>
       </div>
+
+      <!-- Total Services -->
       <div class="metric-card">
-        <h5>Total Services</h5>
-        <h3>{{ total_services }}</h3>
+        <div class="metric-icon">
+          <img src="{{ url_for('static', filename='images/customer-service.png') }}" alt="Services Icon">
+        </div>
+        <div class="metric-info">
+          <h5>Total Services</h5>
+          <h3>{{ total_services }}</h3>
+        </div>
       </div>
+
+      <!-- Booked Venues -->
       <div class="metric-card">
-        <h5>Booked Venues</h5>
-        <h3>{{ booked_venues }}</h3>
+        <div class="metric-icon">
+          <img src="{{ url_for('static', filename='images/book-fair.png') }}" alt="Booked Icon">
+        </div>
+        <div class="metric-info">
+          <h5>Booked Venues</h5>
+          <h3>{{ booked_venues }}</h3>
+        </div>
       </div>
     </div>
 
     <!-- Add Details Button -->
     <div class="actions">
       <button class="btn" onclick="openModal('addDetailsModal')">Add Details</button>
+    </div>
+
+
+        <!-- Charts and Recent Bookings Section -->
+    <div class="dashboard-content">
+      <!-- Left: Chart Section -->
+      <div class="chart-container">
+        <h4>Booked Venues and Services</h4>
+        <canvas id="bookedChart"></canvas>
+        <p id="chartFallback" style="display: none; text-align: center; color: #888;">No data available for the chart.</p>
+      </div>
+
+      <!-- Right: Recent Bookings Table -->
+      <div class="recent-bookings">
+        <h4>Recent Booked Venues</h4>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Venue Name</th>
+              <th>Owner Name</th>
+              <th>Customer Name</th>
+              <th>Location</th>
+              <th>Event</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if recent_bookings %}
+              {% for booking in recent_bookings %}
+              <tr>
+                <td>{{ booking.venue_name }}</td>
+                <td>{{ booking.vendor_name or 'Admin' }}</td>
+                <td>{{ booking.username }}</td>
+                <td>{{ booking.location }}</td>
+                <td>{{ booking.event }}</td>
+              </tr>
+              {% endfor %}
+            {% else %}
+              <tr>
+                <td colspan="5" style="text-align: center; color: #888;">No recent bookings available.</td>
+              </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
     </div>
 
   </main>
@@ -143,5 +229,102 @@
 
   <!-- JavaScript -->
   <script src="/static/scripts/admin.js"></script>
+
+    <!-- JavaScript for Chart -->
+  <script>
+  // Ensure the chart data is properly passed and logged for debugging
+  const chartLabels = {{ chart_labels | tojson | safe }};
+  const chartData = {{ chart_data | tojson | safe }};
+
+  console.log("Chart Labels:", chartLabels);
+  console.log("Chart Data:", chartData);
+
+  // Generate a unique color for each bar
+  const barColors = chartLabels.map((_, index) => {
+    const colors = [
+      'rgba(255, 99, 132, 0.2)', // Red
+      'rgba(54, 162, 235, 0.2)', // Blue
+      'rgba(255, 206, 86, 0.2)', // Yellow
+      'rgba(75, 192, 192, 0.2)', // Green
+      'rgba(153, 102, 255, 0.2)', // Purple
+      'rgba(255, 159, 64, 0.2)', // Orange
+      'rgba(199, 199, 199, 0.2)', // Gray
+      'rgba(255, 99, 71, 0.2)', // Tomato
+      'rgba(144, 238, 144, 0.2)', // Light Green
+      'rgba(135, 206, 250, 0.2)' // Light Blue
+    ];
+    return colors[index % colors.length]; // Cycle through colors
+  });
+
+  const borderColors = chartLabels.map((_, index) => {
+    const colors = [
+      'rgba(255, 99, 132, 1)', // Red
+      'rgba(54, 162, 235, 1)', // Blue
+      'rgba(255, 206, 86, 1)', // Yellow
+      'rgba(75, 192, 192, 1)', // Green
+      'rgba(153, 102, 255, 1)', // Purple
+      'rgba(255, 159, 64, 1)', // Orange
+      'rgba(199, 199, 199, 1)', // Gray
+      'rgba(255, 99, 71, 1)', // Tomato
+      'rgba(144, 238, 144, 1)', // Light Green
+      'rgba(135, 206, 250, 1)' // Light Blue
+    ];
+    return colors[index % colors.length]; // Cycle through colors
+  });
+
+  // Check if the canvas element exists before initializing the chart
+  const chartCanvas = document.getElementById('bookedChart');
+  if (chartCanvas && chartLabels.length && chartData.length) {
+    const ctx = chartCanvas.getContext('2d');
+    const bookedChart = new Chart(ctx, {
+      type: 'bar', // Bar chart
+      data: {
+        labels: chartLabels, // Venue and service names
+        datasets: [{
+          label: 'Number of Bookings',
+          data: chartData, // Booking counts
+          backgroundColor: barColors, // Different colors for each bar
+          borderColor: borderColors, // Different border colors for each bar
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            display: true,
+            position: 'top'
+          }
+        },
+        scales: {
+          x: {
+            title: {
+              display: true,
+              text: 'Venues and Services',
+              color: '#333',
+              font: {
+                size: 14
+              }
+            }
+          },
+          y: {
+            beginAtZero: true,
+            title: {
+              display: true,
+              text: 'Number of Bookings',
+              color: '#333',
+              font: {
+                size: 14
+              }
+            }
+          }
+        }
+      }
+    });
+  } else {
+    console.error("Chart data is missing or invalid.");
+    document.getElementById('chartFallback').style.display = 'block';
+  }
+  </script>
 </body>
 </html>
