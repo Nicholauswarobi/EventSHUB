@@ -38,41 +38,69 @@
   </div>
 
   <div class="container">
-    <class="content">
       <div class="row">
         <div class="card">
-          <a href="{{ url_for('booking')}}" class="card-link">
             <h6>Bookings</h6>
-            <h3>15</h3>
-            <span class="text-success">+11%</span>
+            <h3>{{ total_bookings }}</h3>
+            <!-- <span class="text-success">+{{ total_bookings }}%</span> -->
           </a>
         </div>
       
         <div class="card">
-          <a href="#" class="card-link">
             <h6>Payment History</h6>
-            <h3>15</h3>
-            <span class="text-danger">-14%</span>
+            <h3>{{ total_payment }}</h3>
+            <!-- <span class="text-danger">-{{ total_payment }}%</span> -->
           </a>
         </div>
       </div>
     </div>
-    <div class=" half-width">
-      <h6>Recent Bookings Check Out</h6>
-      <table>
-        <thead>
-          <tr><th>Date</th><th>Venue</th><th>Location</th><th>Payment History</th></tr>
-        </thead>
-        <tbody>
-          <tr><td>4/10/2025</td><td>Chimwaga</td><td>Dodoma</td><td>300,000 Tsh</td></tr>
-          <tr><td>10/11/2024</td><td>St.Gasper</td><td>Dodoma</td><td>500,000 Tsh</td></tr>
-          <tr><td>22/9/2023</td><td>Chinangali Park</td><td>Dodoma</td><td>350,000 Tsh</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-  
-
+    
+<!-- Booked Venues Section -->
+<div class="booked-venues">
+  <h6>Booked Venues</h6>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Image</th>
+        <th>Customer Name</th>
+        <th>Venue Name</th>
+        <th>Event</th>
+        <th>Booking Date</th>
+        <th>Selected Services</th>
+        <th>Service Amount</th>
+        <th>Venue Amount</th>
+        <th>Total Cost</th>
+        <th>Location</th>
+        <th>Payment Method</th>
+        <th>Payment Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for venue in booked_venues %}
+      <tr>
+        <td>
+          {% if venue.image_path %}
+          <img src="{{ venue.image_path }}" alt="{{ venue.venue_name }}" class="table-img">
+          {% else %}
+          <img src="{{ url_for('static', filename='images/default.jpg') }}" alt="Default Image" class="table-img">
+          {% endif %}
+        </td>
+        <td>{{ venue.user_name }}</td>
+        <td>{{ venue.venue_name }}</td>
+        <td>{{ venue.event }}</td>
+        <td>{{ venue.booking_date }}</td>
+        <td>{{ venue.services }}</td>
+        <td>{{ venue.service_amount }} Tsh</td>
+        <td>{{ venue.venue_amount }} Tsh</td>
+        <td>{{ venue.total_cost }} Tsh</td>
+        <td>{{ venue.location }}</td>
+        <td>{{ venue.payment_method }}</td>
+        <td>{{ venue.payment_status }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
 
   <!-- Footer Section -->
   <div class="footer">
