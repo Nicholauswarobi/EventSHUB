@@ -19,10 +19,17 @@
     <h1>Admin Dashboard</h1>
     <p>Manage your platform efficiently</p>
   </div>
+
   <div class="wallet-balance-right">
     <h4>Wallet Balance</h4>
     <p>Tsh {{ wallet_balance }}</p>
   </div>
+
+   <!-- Log Out Button -->
+    <div class="logout-btn-container">
+      <a href="{{ url_for('index') }}" class="btn-logout">Log Out</a>
+    </div>
+
 </div>
 
   <!-- Metrics Section -->
@@ -146,7 +153,7 @@
         <button class="tab-btn active" onclick="openTab(event, 'locationTab')">Add Location</button>
         <button class="tab-btn" onclick="openTab(event, 'venueTab')">Add Venue</button>
         <button class="tab-btn" onclick="openTab(event, 'serviceTab')">Add Service</button>
-        <button class="tab-btn" onclick="openTab(event, 'eventTab')">Add Event</button>
+        <!-- <button class="tab-btn" onclick="openTab(event, 'eventTab')">Add Event</button> -->
       </div>
 
       <!-- Tab Content -->
@@ -194,7 +201,7 @@
       </div>
 
       <!-- Event Tab -->
-      <div id="eventTab" class="tab-content">
+      <!-- <div id="eventTab" class="tab-content">
         <form method="POST" action="/add_event" enctype="multipart/form-data" onsubmit="handleFormSubmit(event, 'eventTab', null, 'addDetailsModal')">
           <h3>Add Event</h3>
           <input type="text" name="event_name" placeholder="Event Name" required>
@@ -215,7 +222,7 @@
           <input type="file" name="event_image" accept="image/*" required>
           <button type="submit" name="submit_event">Submit Event</button>
         </form>
-      </div>
+      </div> -->
     </div>
   </div>
 
